@@ -1,0 +1,1549 @@
+<!DOCTYPE html><html lang="zh" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Resource-adjust | 平屋慢本質</title><meta name="author" content="Yo-Lin"><meta name="copyright" content="Yo-Lin"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="狀況發生!資源調整的觀察request 寫 500m 的意義limitsNodeHPARunning and Ready .kubernetes-helm{--kh-blue:#326de6;--kh-link:#2455b5;--kh-bg:#fff;--kh-ink:#333;--kh-soft:#eef4ff;--kh-line:#d5deed;--kh-code:#182235;--kh">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Resource-adjust">
+<meta property="og:url" content="https://chi-keke.github.io/Mind/2026/10/01/K8S-resource-adjust/">
+<meta property="og:site_name" content="平屋慢本質">
+<meta property="og:description" content="狀況發生!資源調整的觀察request 寫 500m 的意義limitsNodeHPARunning and Ready .kubernetes-helm{--kh-blue:#326de6;--kh-link:#2455b5;--kh-bg:#fff;--kh-ink:#333;--kh-soft:#eef4ff;--kh-line:#d5deed;--kh-code:#182235;--kh">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png">
+<meta property="article:published_time" content="2026-10-01T00:30:00.000Z">
+<meta property="article:modified_time" content="2026-10-04T02:40:05.612Z">
+<meta property="article:author" content="Yo-Lin">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Resource-adjust",
+  "url": "https://chi-keke.github.io/Mind/2026/10/01/K8S-resource-adjust/",
+  "image": "https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png",
+  "datePublished": "2026-10-01T00:30:00.000Z",
+  "dateModified": "2026-10-04T02:40:05.612Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Yo-Lin",
+      "url": "https://chi-keke.github.io/Mind"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/Mind/img/kiwibird.png"><link rel="canonical" href="https://chi-keke.github.io/Mind/2026/10/01/K8S-resource-adjust/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/Mind/css/index.css?v=5.5.5-b1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/Mind/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Resource-adjust',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #fcf8e8;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="https://i.imgur.com/q4xr50n.png" onerror="this.onerror=null;this.src='/Mind/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/Mind/archives/"><div class="headline">Articles</div><div class="length-num">60</div></a><a href="/Mind/tags/"><div class="headline">Tags</div><div class="length-num">7</div></a><a href="/Mind/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/Mind/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/Mind/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/Mind/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/Mind/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/Mind/"><span class="site-name">平屋慢本質</span></a><a class="nav-page-title" href="/Mind/"><span class="site-name">Resource-adjust</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/Mind/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/Mind/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/Mind/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/Mind/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/Mind/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Resource-adjust</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-10-01T00:30:00.000Z" title="Created 2026-10-01 08:30:00">2026-10-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-10-04T02:40:05.612Z" title="Updated 2026-10-04 10:40:05">2026-10-04</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/Mind/categories/kubernetes/">kubernetes</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div class="tabs"><div class="nav-tabs"><button type="button" class="tab active">狀況發生!</button><button type="button" class="tab">資源調整的觀察</button><button type="button" class="tab">request 寫 500m 的意義</button><button type="button" class="tab">limits</button><button type="button" class="tab">Node</button><button type="button" class="tab">HPA</button><button type="button" class="tab">Running and Ready</button></div><div class="tab-contents"><div class="tab-item-content active"><style>
+.kubernetes-helm{--kh-blue:#326de6;--kh-link:#2455b5;--kh-bg:#fff;--kh-ink:#333;--kh-soft:#eef4ff;--kh-line:#d5deed;--kh-code:#182235;--kh-code-ink:#f3f6fc;background:var(--kh-bg);color:var(--kh-ink);padding:24px;font-family:'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.85;overflow-wrap:anywhere;}
+.kubernetes-helm *{box-sizing:border-box;}
+#article-container .kubernetes-helm h2,#article-container .kubernetes-helm h3,.kubernetes-helm h2,.kubernetes-helm h3{color:var(--kh-ink);line-height:1.4;font-weight:800;margin:0 0 16px;}
+.kubernetes-helm p{margin:12px 0;}
+.kubernetes-helm a{color:var(--kh-link);text-decoration:underline;text-underline-offset:3px;}
+.kubernetes-helm :focus-visible{outline:3px solid var(--kh-link);outline-offset:4px;}
+.kubernetes-helm code{font-family:Consolas,monospace;background:var(--kh-soft);color:inherit;padding:2px 5px;border-radius:3px;}
+.kubernetes-helm .kh-hero{padding:28px 0 32px;margin-bottom:28px;border-bottom:3px solid var(--kh-blue);}
+.kubernetes-helm .kh-emblem{display:block;width:58px;height:58px;margin-bottom:20px;background:var(--kh-blue);clip-path:polygon(50% 0,89% 19%,99% 61%,72% 96%,28% 96%,1% 61%,11% 19%);}
+.kubernetes-helm .kh-hero h2{font-size:clamp(1.6rem,4vw,2.6rem);letter-spacing:-.02em;}
+.kubernetes-helm .kh-hero p{max-width:42em;}
+.kubernetes-helm .kh-section{padding-left:14px;border-left:5px solid var(--kh-blue);margin-top:30px;}
+.kubernetes-helm .kh-note{padding:16px 20px;margin:22px 0;background:var(--kh-soft);border-left:4px solid var(--kh-blue);border-radius:4px;}
+.kubernetes-helm .kh-table-scroll{max-width:100%;overflow-x:auto;margin:22px 0;}
+#article-container .kubernetes-helm table.kh-table,.kubernetes-helm table.kh-table{width:100%;margin:0;border-collapse:collapse;table-layout:auto;background:var(--kh-bg);color:var(--kh-ink);}
+.kubernetes-helm .kh-table th,.kubernetes-helm .kh-table td{padding:12px 16px;border:1px solid var(--kh-line);text-align:left;vertical-align:top;background:var(--kh-bg);color:var(--kh-ink);}
+.kubernetes-helm .kh-table th{background:var(--kh-soft);font-weight:700;}
+.kubernetes-helm .kh-code{margin:24px 0;background:var(--kh-code);color:var(--kh-code-ink);border-radius:4px;overflow:hidden;}
+.kubernetes-helm .kh-code-label{padding:8px 16px;border-bottom:1px solid #43516a;font-size:.85rem;}
+#article-container .kubernetes-helm pre.kh-pre,.kubernetes-helm pre.kh-pre{margin:0!important;padding:18px!important;background:var(--kh-code)!important;color:var(--kh-code-ink)!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;white-space:pre!important;overflow-x:auto!important;font:14px/1.8 Consolas,monospace!important;}
+.kubernetes-helm pre.kh-pre code{background:transparent;color:inherit;padding:0;}
+[data-theme='dark'] .kubernetes-helm{--kh-blue:#7fa9ff;--kh-link:#a4c2ff;--kh-bg:#17202e;--kh-ink:#eef2f8;--kh-soft:#23334e;--kh-line:#52647f;}
+@media(max-width:600px){.kubernetes-helm{padding:16px;}.kubernetes-helm .kh-hero{padding:16px 0 24px;}.kubernetes-helm .kh-note{padding:14px;}.kubernetes-helm .kh-table th,.kubernetes-helm .kh-table td{padding:10px;min-width:8em;}}
+
+#article-container .kubernetes-helm table.kh-table{width:auto;max-width:100%;}
+.kubernetes-helm .kh-diagram{overflow-x:auto;border:1px solid var(--kh-line);border-radius:4px;margin:22px 0;padding:16px;background:var(--kh-bg);}
+.kubernetes-helm .kh-diagram .mermaid{min-width:540px;}
+.kubernetes-helm .kh-diagram svg{min-width:540px;max-width:none!important;}
+.kubernetes-helm .kh-diagram p{font-size:.9em;color:var(--kh-ink);}
+#article-container .kubernetes-helm .kh-diagram svg{background:var(--kh-bg)!important;}
+#article-container .kubernetes-helm .kh-diagram svg .node rect{fill:var(--kh-soft)!important;stroke:var(--kh-blue)!important;}
+#article-container .kubernetes-helm .kh-diagram svg .nodeLabel,#article-container .kubernetes-helm .kh-diagram svg .nodeLabel p,#article-container .kubernetes-helm .kh-diagram svg .nodeLabel span{color:var(--kh-ink)!important;fill:var(--kh-ink)!important;}
+#article-container .kubernetes-helm .kh-diagram svg .cluster rect{fill:var(--kh-bg)!important;stroke:var(--kh-line)!important;}
+#article-container .kubernetes-helm pre.kh-pre{tab-size:4;}
+.kubernetes-helm .kh-section{margin-top:32px!important;}
+@media(max-width:600px){.kubernetes-helm{padding:12px;}.kubernetes-helm .kh-diagram{padding:8px;}.kubernetes-helm .kh-table th,.kubernetes-helm .kh-table td{min-width:7em;}}
+
+#article-container .kubernetes-helm .kh-diagram svg .node polygon{fill:var(--kh-soft)!important;stroke:var(--kh-blue)!important;}
+.kubernetes-helm .kh-diagram svg{min-width:620px;}
+</style>
+<div class="kubernetes-helm">
+<div class="kh-hero">
+<span class="kh-emblem" aria-hidden="true"></span>
+<h2>
+Kubernetes 資源調整：從配額到可用副本
+</h2>
+<p>
+服務想增加一個副本，卻被資源配額擋下。調整 CPU
+時，需要分清楚允許申請多少、Node
+還能排入多少，以及程式當下實際用了多少。
+</p>
+</div>
+<h3 class="kh-section">
+原始錯誤訊息
+</h3>
+<div class="kh-code">
+<div class="kh-code-label">
+<span>Pod 建立失敗紀錄</span>
+</div>
+<pre class="kh-pre">pods &quot;promotion-web-api-76d9db5667-8wxfr&quot; is forbidden: exceeded quota: default-4w42q, requested: limits.cpu=2250m, used: limits.cpu=7250m, limited: limits.cpu=8:Deployment does not have minimum availability.</pre>
+</div>
+<p>
+這段紀錄同時呈現三個層面：ResourceQuota 超限、Pod 建立遭到拒絕，以及
+Deployment 未達最低可用性。先解讀配額欄位，再檢查 Deployment
+的實際狀態。
+</p>
+<div class="kh-table-scroll" role="region" aria-label="訊息欄位比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+訊息欄位
+</th>
+<th scope="col">
+意義
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>pods "promotion-web-api-76d9db5667-8wxfr" is forbidden</code>
+</td>
+<td>
+Kubernetes API Server 拒絕這次 Pod 建立請求，這個新 Pod 尚未成功建立。
+</td>
+</tr>
+<tr>
+<td>
+<code>exceeded quota: default-4w42q</code>
+</td>
+<td>
+Namespace 中名為 default-4w42q 的 ResourceQuota 不允許這次新增。
+</td>
+</tr>
+<tr>
+<td>
+<code>requested: limits.cpu=2250m</code>
+</td>
+<td>
+這次新增會計入 2250m，即 2.25 CPU 的 limits.cpu 配額。此處 requested
+是配額增量，不是 resources.requests.cpu。
+</td>
+</tr>
+<tr>
+<td>
+<code>used: limits.cpu=7250m</code>
+</td>
+<td>
+已有 7250m，即 7.25 CPU 的 limits.cpu 被計入配額；不是當下實際消耗 7.25
+CPU。
+</td>
+</tr>
+<tr>
+<td>
+<code>limited: limits.cpu=8</code>
+</td>
+<td>
+Namespace 的 limits.cpu 配額上限是 8 CPU，即 8000m。
+</td>
+</tr>
+<tr>
+<td>
+<code>Deployment does not have minimum availability</code>
+</td>
+<td>
+Deployment 的可用副本未達最低要求，需再查看 replicas、Available
+condition 與更新策略。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="kh-note">
+<p>
+配額計算：7250m + 2250m = 9500m &gt; 8000m。原本只剩 750m 的 limits.cpu
+配額，這次新增需要 2250m，因此超出 1500m。即使 Node 還有空閒
+CPU，也無法繞過這項配額檢查。
+</p>
+</div>
+<p>
+例如期望 3 個副本而目前只有 2
+個可用，是否未達最低可用性，仍要看更新策略允許的
+<code>maxUnavailable</code>。<code>Available</code> 也不等於
+<code>Running</code>：副本需就緒並符合 <code>minReadySeconds</code>
+等條件。此錯誤未提供完整 Deployment
+設定，不能直接判定實際期望與可用副本各是多少。
+</p>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/policy/resource-quotas/">Kubernetes：ResourceQuota</a>；<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">Kubernetes：Deployment
+可用性</a>
+</p>
+</div></div><div class="tab-item-content"><div class="kubernetes-helm">
+<h3 class="kh-section">
+調整設定後，要一起觀察哪些變化
+</h3>
+<div class="kh-table-scroll" role="region" aria-label="觀察項目比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+觀察項目
+</th>
+<th scope="col">
+應核對的內容
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+resource request 下降／上升
+</td>
+<td>
+調整前後的 Pod requests、排程容量，以及 HPA 的 CPU Utilization
+分母是否改變。
+</td>
+</tr>
+<tr>
+<td>
+Node 數量減少／增加
+</td>
+<td>
+是否啟用 Node 自動擴縮、是否有排不進去的
+Pods，以及是否符合擴容或整併條件；request 與 Node 數量不是固定比例。
+</td>
+</tr>
+<tr>
+<td>
+是否 Throttled
+</td>
+<td>
+是否用完 CPU limit 對應配額；同時區分 Node CPU 競爭與應用程式負載。
+</td>
+</tr>
+<tr>
+<td>
+limits 是否正常套用
+</td>
+<td>
+比對 chart、pipeline 產出、Deployment template 與實際 Pod 的
+resources，不能只看設定檔。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 class="kh-section">
+原始維運紀錄
+</h3>
+<p>
+原稿記錄曾遇到 limits 沒有正常套用，當時在 Rancher 手動調整
+limits；另記錄 chart 檔的 limits 需要使用 pipeline
+<code>v1.3.3-stable</code> 以上版本。
+</p>
+<div class="kh-note">
+<p>
+以上是內部環境的原始觀察，不是 Kubernetes
+的通用版本要求。尚未查核內部討論的完整內容，也未確認目前 pipeline
+是否仍有相同限制。
+</p>
+</div>
+<p>
+<a target="_blank" rel="noopener" href="https://91app.slack.com/archives/CJHPX1DGF/p1746165782611889">內部討論來源：資源調整與
+pipeline</a>
+</p>
+</div></div><div class="tab-item-content"><div class="kubernetes-helm">
+<h3 class="kh-section">
+request 寫 500m，代表什麼
+</h3>
+<p>
+<code>request: 500m</code> 表示排程時要計入 0.5 CPU
+的需求，不是建立一台只有 0.5 CPU 的小主機。以下假設 Pod
+只有一個應用容器。
+</p>
+<div class="kh-code">
+<div class="kh-code-label">
+<span>容器的 CPU 設定</span>
+</div>
+<pre class="kh-pre">resources:
+  requests:
+    cpu: 500m
+  limits:
+    cpu: 2000m</pre>
+</div>
+<div class="kh-table-scroll" role="region" aria-label="當下情況比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+當下情況
+</th>
+<th scope="col">
+可能的 CPU 使用量
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+沒什麼請求
+</td>
+<td>
+可能只用 20m，不會固定消耗 500m。
+</td>
+</tr>
+<tr>
+<td>
+工作變多，Node 有空閒 CPU
+</td>
+<td>
+可以用到 800m、1500m。
+</td>
+</tr>
+<tr>
+<td>
+用完 2000m limit 對應的 CPU 配額
+</td>
+<td>
+受到 CPU limit 限速，等待後續配額週期。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+這個容器申請 0.5 CPU 的排程容量，最高允許使用 2
+CPU；實際使用量取決於工作量與可用資源。一般情況下，這不代表綁定半顆專屬
+CPU。
+</p>
+<div class="kh-table-scroll" role="region"
+aria-label="request 的用途比較" tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+request 的用途
+</th>
+<th scope="col">
+影響
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+排入 Node
+</td>
+<td>
+Scheduler 確認單台 Node 的剩餘可排程容量足以容納
+500m，並符合其他資源與排程條件。
+</td>
+</tr>
+<tr>
+<td>
+CPU 發生競爭
+</td>
+<td>
+影響容器取得 CPU 時間的相對權重，不是忙碌時固定限制在 500m。
+</td>
+</tr>
+<tr>
+<td>
+HPA 使用 CPU Utilization
+</td>
+<td>
+request 是使用率分母，例如實際 400m ÷ request 500m = 80%。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 class="kh-section">
+訂位容量與實際使用量
+</h3>
+<p>
+可以把 request 想成訂位，實際 CPU
+使用量則是當下有多少人在使用。以下假設一台 Node 扣除其他需求後，有
+<code>4000m</code> 可供這批 Pods 排程，且只考慮 CPU。
+</p>
+<div class="kh-table-scroll" role="region" aria-label="情境比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+情境
+</th>
+<th scope="col">
+結果
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+每個 Pod request 為 500m
+</td>
+<td>
+4000m ÷ 500m = 8，最多容納 8 個。
+</td>
+</tr>
+<tr>
+<td>
+8 個 Pod 當下各只用 10m
+</td>
+<td>
+實際合計 80m，但 requests 合計仍是 4000m。
+</td>
+</tr>
+<tr>
+<td>
+再新增第 9 個相同的 Pod
+</td>
+<td>
+這台 Node 的 CPU 排程容量已滿，需找其他符合條件的 Node。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+排程時按申報的需求計算，可以避免因平時使用量低就把太多 Pods 塞在同一台
+Node。實際還要考慮 Memory、Pod 數量上限、系統保留資源及其他排程限制。
+</p>
+<h3 class="kh-section">
+request 設太大或太小的影響
+</h3>
+<p>
+設定 <code>requests.cpu: 500m</code> 後，Scheduler
+尋找有足夠容量且符合條件的
+Node。成功排入後，這份需求就會被計入；找不到合適 Node 時，Pod 可能維持
+<code>Pending</code>。
+</p>
+<div class="kh-note">
+<p>
+CPU request 若設得過大，會壓縮共用這批 Node 的其他服務新增 Pod
+或擴容的空間。即使 Node 實際 CPU 使用率只有 10%，也可能因 requests
+接近可排程容量而放不進新 Pod。若啟用 Node 自動擴縮，還可能提早新增
+Node、增加成本。
+</p>
+</div>
+<p>
+request 設得過小，則可能讓太多 Pods 擠在一起，忙碌時競爭 CPU。request
+是容量規劃與分配的依據，limit 是執行時的使用上限。
+</p>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/">Kubernetes：CPU
+資源分配</a>；<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">Kubernetes：HPA
+計算方式</a>
+</p>
+</div></div><div class="tab-item-content"><div class="kubernetes-helm">
+<h3 class="kh-section">
+排程只剩 1m，為什麼還能使用更多 CPU
+</h3>
+<p>
+假設新的 Pod request 是 <code>500m</code>、limit 是
+<code>1000m</code>，排入後 Node 的排程容量只剩
+<code>1m</code>。這個數字代表尚未被 requests 占用的容量，不是 CPU
+當下只剩 1m 能運算。
+</p>
+<p>
+以下假設 Node 可排程 CPU 共 <code>2000m</code>。其他 Pods
+雖然申報較高的需求，當下未必全部用完。
+</p>
+<div class="kh-table-scroll" role="region" aria-label="項目比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+項目
+</th>
+<th scope="col">
+CPU request
+</th>
+<th scope="col">
+當下實際使用示例
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+其他 Pods 合計
+</td>
+<td>
+1499m
+</td>
+<td>
+600m
+</td>
+</tr>
+<tr>
+<td>
+新 Pod
+</td>
+<td>
+500m
+</td>
+<td>
+1000m
+</td>
+</tr>
+<tr>
+<td>
+合計
+</td>
+<td>
+1999m
+</td>
+<td>
+1600m
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+排程容量剩下 <code>2000m − 1999m = 1m</code>，但實際使用只有
+<code>1600m</code>，所以此例中新 Pod 仍可使用到
+<code>1000m</code>。這是假設當下有足夠 CPU 的示例，limit
+不保證一定能取得這麼多 CPU。
+</p>
+<h3 class="kh-section">
+其他 Pods 忙起來，是否就會 throttling
+</h3>
+<div class="kh-table-scroll" role="region" aria-label="情況比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+情況
+</th>
+<th scope="col">
+發生什麼事
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Node 的 CPU 不夠大家同時使用
+</td>
+<td>
+發生 CPU 競爭，容器需等待 CPU 執行時間；request 影響分配權重，即使未達
+limit 也可能變慢。
+</td>
+</tr>
+<tr>
+<td>
+容器用完自己的 CPU limit 配額
+</td>
+<td>
+發生 CPU throttling，等待後續配額週期；即使 Node 還有空閒
+CPU，也可能發生。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+其他 Pods 忙起來，不代表這個 Pod 一定觸發 limit
+throttling。它可能只是分到的 CPU
+時間減少，兩種情況也可能同時存在。request <code>500m</code>
+並不是一忙起來就強制限制在 500m。
+</p>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">Kubernetes：requests
+與 limits 的執行方式</a>
+</p>
+</div></div><div class="tab-item-content"><div class="kubernetes-helm">
+<h3 class="kh-section">
+Node 不屬於某個 namespace
+</h3>
+<p>
+Node 屬於整個 Cluster，namespace 本身沒有固定分配幾台 Node。同一台 Node
+可以同時執行不同 namespace 的 Pods。
+</p>
+<div class="kh-table-scroll" role="region" aria-label="Node比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+Node
+</th>
+<th scope="col">
+可能執行的 Pods
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Node 1
+</td>
+<td>
+namespace A 的 Pod、namespace B 的 Pod
+</td>
+</tr>
+<tr>
+<td>
+Node 2
+</td>
+<td>
+namespace A 的 Pod、namespace C 的 Pod
+</td>
+</tr>
+<tr>
+<td>
+Node 3
+</td>
+<td>
+namespace B 的 Pod
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">Kubernetes：Namespaces</a>
+</p>
+<h3 class="kh-section">
+Namespace 配額不是預留的 Node 容量
+</h3>
+<p>
+Namespace 的 CPU／Memory request 上限通常由管理員透過
+<code>ResourceQuota</code> 設定，不是每個 namespace 自動就有。以下是
+namespace A 的配額片段。
+</p>
+<div class="kh-code">
+<div class="kh-code-label">
+<span>ResourceQuota 的 hard 設定片段</span>
+</div>
+<pre class="kh-pre">hard:
+  requests.cpu: &quot;4&quot;
+  requests.memory: 8Gi</pre>
+</div>
+<p>
+受配額計算的 Pods，其 CPU requests 合計不得超過 <code>4
+CPU</code>，Memory requests 合計不得超過
+<code>8Gi</code>。這是申請資源總額的上限，不表示已預留 4
+CPU，也不表示分配了幾台 Node。
+</p>
+<div class="kh-table-scroll" role="region" aria-label="阻擋位置比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+阻擋位置
+</th>
+<th scope="col">
+情況
+</th>
+<th scope="col">
+結果
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+配額檢查
+</td>
+<td>
+namespace 配額已滿，即使 Node 還有空間。
+</td>
+<td>
+新 Pod 的建立請求被拒絕，不是先建立成 Pending。
+</td>
+</tr>
+<tr>
+<td>
+排程
+</td>
+<td>
+配額允許建立，但找不到符合需求的 Node。
+</td>
+<td>
+Pod 已建立，可能維持 Pending。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 class="kh-section">
+從配額檢查到 Node 擴容
+</h3>
+<h4>
+Pod 建立與排程的不同關卡
+</h4>
+<div class="kh-diagram">
+<div class="mermaid-wrap">
+<pre class="mermaid-src" data-config="{}" hidden>
+    flowchart TB
+Create[&quot;建立 Pod 的請求&quot;] --&gt; Quota{&quot;配額允許嗎？&quot;}
+Quota --&gt;|否| Reject[&quot;拒絕建立：Forbidden&quot;]
+Quota --&gt;|是| Admit[&quot;Pod 建立成功&quot;]
+Admit --&gt; Fit{&quot;有合適 Node 且容量足夠？&quot;}
+Fit --&gt;|是| Schedule[&quot;排程到 Node&quot;]
+Fit --&gt;|否| Pending[&quot;Pending：等待排程&quot;]
+Pending --&gt; Auto{&quot;已啟用且可擴容？&quot;}
+Auto --&gt;|是| New[&quot;新增合適 Node&quot;]
+New --&gt; Fit
+Auto --&gt;|否| Wait[&quot;等待容量釋放或條件改善&quot;]
+  </pre>
+</div>
+</div>
+<p>
+由上往下閱讀，菱形是檢查條件，分支標明是／否。這張圖聚焦資源配額與容量，不列出其他可能拒絕建立的驗證或政策。
+</p>
+<p>
+啟用 Cluster Autoscaler 或 Karpenter 等 Node
+自動擴縮工具後，工具可評估排不進去的 Pods，判斷新增 Node
+能否解決需求；符合擴容設定且未達上限時，才新增合適 Node，再由 Scheduler
+排程。
+</p>
+<div class="kh-note">
+<p>
+不是所有 Pending 都會觸發加
+Node。排程條件無法滿足、已達擴容上限，或雲端容量不足，都可能無法擴容。減少
+Node 則還需符合整併、搬移與中斷限制，不能只看 request 是否下降。
+</p>
+</div>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/policy/resource-quotas/">Kubernetes：ResourceQuota</a>；<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/cluster-administration/node-autoscaling/">Kubernetes：Node
+自動擴縮</a>
+</p>
+</div></div><div class="tab-item-content"><div class="kubernetes-helm">
+<h3 class="kh-section">
+CPU Utilization 的分母是 request
+</h3>
+<p>
+HPA 若使用 CPU <code>Utilization</code> 百分比，會將 CPU 使用量相對於
+request 計算，再依符合條件的 Pods 彙整。以下用單一容器、資料齊全的 Pod
+說明。
+</p>
+<div class="kh-code">
+<div class="kh-code-label">
+<span>單一 Pod 的使用率示意</span>
+</div>
+<pre class="kh-pre">HPA CPU 使用率 = 實際 CPU 使用量 ÷ CPU request × 100%</pre>
+</div>
+<div class="kh-table-scroll" role="region"
+aria-label="實際 CPU 使用量比較" tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+實際 CPU 使用量
+</th>
+<th scope="col">
+CPU request
+</th>
+<th scope="col">
+相對使用率
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+400m
+</td>
+<td>
+500m
+</td>
+<td>
+80%
+</td>
+</tr>
+<tr>
+<td>
+400m
+</td>
+<td>
+1000m
+</td>
+<td>
+40%
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+提高 request，一方面讓每個 Pod 占用更多排程容量，另一方面可能降低 HPA
+算出的使用率。實際結果需一起看 request／limit、replicas／HPA、Node
+規格與自動擴縮設定；不能直接推論 request 加倍就會多幾台 Node。
+</p>
+<h3 class="kh-section">
+min 2、max 4 需要多少排程容量
+</h3>
+<p>
+假設每個 Pod 的 CPU request 合計為 <code>500m</code>，HPA 設定
+<code>minReplicas: 2</code>、<code>maxReplicas:
+4</code>。這表示期望副本數在 2～4
+之間調整，不保證當下每個副本都能成功排程或就緒。
+</p>
+<div class="kh-table-scroll" role="region" aria-label="Pod 副本數比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+Pod 副本數
+</th>
+<th scope="col">
+CPU request 總需求
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+2
+</td>
+<td>
+1000m
+</td>
+</tr>
+<tr>
+<td>
+3
+</td>
+<td>
+1500m
+</td>
+</tr>
+<tr>
+<td>
+4
+</td>
+<td>
+2000m
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="kh-table-scroll" role="region" aria-label="元件比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+元件
+</th>
+<th scope="col">
+負責的事情
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+HPA
+</td>
+<td>
+根據指標與設定調整副本數；啟動時的初始數量也受 Deployment replicas
+影響，HPA 會週期性調整。
+</td>
+</tr>
+<tr>
+<td>
+Scheduler
+</td>
+<td>
+選擇 Node；兩個 Pods 可以在同一台，也可以分布在不同 Node。成功排入的
+request 會占用該 Node 的排程容量。
+</td>
+</tr>
+<tr>
+<td>
+Node Autoscaler
+</td>
+<td>
+評估是否需要及能否調整 Node 容量，不由 HPA 直接建立 Node。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 class="kh-section">
+只夠一個 Pod 時，第二個會等待
+</h3>
+<p>
+假設服務需要 2 個 Pods，每個 request 為
+<code>500m</code>。只有一台符合條件的 Node 還有 <code>500m</code>
+排程容量，其他 Node 都放不下。先排入的 Pod
+可以啟動，另一個會因容量不足而等待。
+</p>
+<h4>
+兩個期望副本，只有一個能排入
+</h4>
+<div class="kh-diagram">
+<div class="mermaid-wrap">
+<pre class="mermaid-src" data-config="{}" hidden>
+    flowchart TB
+Desired[&quot;期望 2 個 Pods：各 request 500m&quot;] --&gt; A[&quot;Pod A&quot;]
+Desired --&gt; B[&quot;Pod B&quot;]
+subgraph Node[&quot;唯一可用 Node：原剩餘 500m&quot;]
+Running[&quot;Pod A 排入：啟動後 Running&quot;]
+end
+A --&gt;|占用 500m 排程容量| Running
+B --&gt;|已無足夠容量| Pending[&quot;Pod B：Pending &#x2F; Insufficient cpu&quot;]
+  </pre>
+</div>
+</div>
+<p>
+兩個分支代表不同 Pod，不表示 HPA
+指定誰先成功。假設沒有搶占等額外行為；Running 的 Pod
+仍需通過就緒條件才能正常接流量。
+</p>
+<div class="kh-note">
+<p>
+HPA 的 minReplicas: 2 是最低期望副本數，不是保證有 2 個可用副本。若 Node
+自動擴縮允許新增合適 Node，第二個 Pod 才有機會排入；否則等待容量釋放。
+</p>
+</div>
+<p>
+CPU 容量不能跨 Node 湊給同一個 Pod。例如兩台 Node 各剩
+<code>250m</code>，合計雖然是 500m，仍無法容納單一 request 為 500m 的
+Pod。
+</p>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">Kubernetes：Horizontal
+Pod Autoscaling</a>
+</p>
+</div></div><div class="tab-item-content"><div class="kubernetes-helm">
+<h3 class="kh-section">
+執行階段與就緒條件分開看
+</h3>
+<div class="kh-table-scroll" role="region" aria-label="欄位比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+欄位
+</th>
+<th scope="col">
+意義
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>Running</code>
+</td>
+<td>
+Pod
+的執行階段。容器已建立，至少一個容器仍在執行，或正在啟動／重啟；不代表所有容器都健康。
+</td>
+</tr>
+<tr>
+<td>
+<code>Ready</code>
+</td>
+<td>
+Pod 的就緒條件。一般情況需各容器就緒，並符合已設定的 readiness gates
+等條件，才適合接收一般 Service 流量。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4>
+Running 期間，Ready 可以來回變化
+</h4>
+<div class="kh-diagram">
+<div class="mermaid-wrap">
+<pre class="mermaid-src" data-config="{}" hidden>
+    flowchart TB
+Pending[&quot;Pending：尚未進入執行階段&quot;] --&gt;|排程及啟動完成| Unready[&quot;Running + Ready&#x3D;False&quot;]
+Unready --&gt;|就緒檢查與條件通過| Ready[&quot;Running + Ready&#x3D;True&quot;]
+Ready --&gt;|就緒檢查達失敗門檻| Unready
+  </pre>
+</div>
+</div>
+<p>
+這是簡化的典型啟動與就緒變化，不是完整 Pod 生命週期。Ready 成為 True
+後，Pod 仍是 Running；就緒失敗也不一定使程式退出。
+</p>
+<h3 class="kh-section">
+三種 Running 但未 Ready 的情境
+</h3>
+<div class="kh-table-scroll" role="region" aria-label="情境比較"
+tabindex="0">
+<table class="kh-table">
+<thead>
+<tr>
+<th scope="col">
+情境
+</th>
+<th scope="col">
+程式為何仍 Running
+</th>
+<th scope="col">
+為何未 Ready
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+剛啟動，還在初始化
+</td>
+<td>
+API 程式已執行，正在載入設定或預熱資料。
+</td>
+<td>
+readiness 可能尚未連通或回傳 503，完成初始化並通過檢查後才就緒。
+</td>
+</tr>
+<tr>
+<td>
+必要依賴暫時故障
+</td>
+<td>
+API 程式仍存活，也能接受 HTTP 連線，但必要資料庫連線失敗。
+</td>
+<td>
+只有當 readiness 邏輯包含該依賴檢查時，才會反映成失敗，例如回傳
+503；Kubernetes 不會自行判斷資料庫健康。
+</td>
+</tr>
+<tr>
+<td>
+服務太忙，健康檢查逾時
+</td>
+<td>
+CPU 競爭、throttling 或執行緒池耗盡，但程式沒有退出。
+</td>
+<td>
+/health/ready 未能在設定時間內回應，失敗達門檻後變成未 Ready。
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+一般 Service 會在就緒狀態更新後，停止將新流量導向未 Ready 的
+Pod。readiness
+失敗本身不會重啟容器，恢復通過檢查後可再次接流量；這不表示既有連線會立刻中斷。
+</p>
+<div class="kh-note">
+<p>
+沒有設定 readinessProbe 時，Kubernetes 不會自動驗證 API
+的業務功能，容器啟動後通常會被視為就緒；Pod
+仍受其他就緒條件影響。本文描述一般 Service 行為，未涵蓋
+publishNotReadyAddresses 等特殊設定。
+</p>
+</div>
+<p>
+<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/">Kubernetes：Pod
+生命週期</a>；<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/pods/probes/">Kubernetes：探針行為</a>
+</p>
+</div></div></div><div class="tab-to-top"><button type="button" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div></div>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://chi-keke.github.io/Mind">Yo-Lin</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://chi-keke.github.io/Mind/2026/10/01/K8S-resource-adjust/">https://chi-keke.github.io/Mind/2026/10/01/K8S-resource-adjust/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/Mind/2026/09/28/K8S-CDN-Header-Lost/" title="CDN-Header-Lost"><img class="cover" src="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" onerror="onerror=null;src='/Mind/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">CDN-Header-Lost</div></div><div class="info-2"><div class="info-item-1">狀況發生!架構CloudFront Origin Request PolicyALB Listener RulesStep 3：EKS Ingress Controller AnnotationsStep 4：快速診斷：直接看 Pod 收到的 Header .kubernetes-helm{--kh-blue:#326de6;--kh-link:#2455b5;--kh-bg:#fff;--kh-ink:#333;--kh-soft:#eef4ff;--kh-line:#d5deed;--kh-code:#182235;--kh-code-ink:#f3f6fc;background:var(--kh-bg);color:var(--kh-ink);padding:24px;font-family:'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.85;overflow-wrap:anywhere;} .kubernetes-helm *{box-sizing:border-box;}...</div></div></div></a><a class="pagination-related" href="/Mind/2026/10/01/K8S-resource-adjust-pure/" title="Resource-adjust"><img class="cover" src="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" onerror="onerror=null;src='/Mind/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Resource-adjust</div></div><div class="info-2"><div class="info-item-1">狀況發生! Kubernetes 資源調整：從配額到可用副本 服務想增加一個副本，卻被資源配額擋下。調整 CPU 時，需要分清楚允許申請多少、Node 還能排入多少，以及程式當下實際用了多少。 原始錯誤訊息 Pod 建立失敗紀錄 1pods &quot;promotion-web-api-76d9db5667-8wxfr&quot; is forbidden: exceeded quota: default-4w42q, requested: limits.cpu=2250m, used: limits.cpu=7250m, limited: limits.cpu=8:Deployment does not have minimum availability. 這段紀錄同時呈現三個層面：ResourceQuota 超限、Pod 建立遭到拒絕，以及 Deployment 未達最低可用性。先解讀配額欄位，再檢查 Deployment 的實際狀態。        訊息欄位 意義     pods "promotion-web-api-7...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://i.imgur.com/q4xr50n.png" onerror="this.onerror=null;this.src='/Mind/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Yo-Lin</div><div class="author-info-description"></div><div class="site-data"><a href="/Mind/archives/"><div class="headline">Articles</div><div class="length-num">60</div></a><a href="/Mind/tags/"><div class="headline">Tags</div><div class="length-num">7</div></a><a href="/Mind/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/CHI-KEKE"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/CHI-KEKE" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:chilly37647@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">世界上總會有一些溫暖的小角落</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">
+Kubernetes 資源調整：從配額到可用副本
+</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.1.</span> <span class="toc-text">
+原始錯誤訊息
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.2.</span> <span class="toc-text">
+調整設定後，要一起觀察哪些變化
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.3.</span> <span class="toc-text">
+原始維運紀錄
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.4.</span> <span class="toc-text">
+request 寫 500m，代表什麼
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.5.</span> <span class="toc-text">
+訂位容量與實際使用量
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.6.</span> <span class="toc-text">
+request 設太大或太小的影響
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.7.</span> <span class="toc-text">
+排程只剩 1m，為什麼還能使用更多 CPU
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.8.</span> <span class="toc-text">
+其他 Pods 忙起來，是否就會 throttling
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.9.</span> <span class="toc-text">
+Node 不屬於某個 namespace
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.10.</span> <span class="toc-text">
+Namespace 配額不是預留的 Node 容量
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.11.</span> <span class="toc-text">
+從配額檢查到 Node 擴容
+</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.11.1.</span> <span class="toc-text">
+Pod 建立與排程的不同關卡
+</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.12.</span> <span class="toc-text">
+CPU Utilization 的分母是 request
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.13.</span> <span class="toc-text">
+min 2、max 4 需要多少排程容量
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.14.</span> <span class="toc-text">
+只夠一個 Pod 時，第二個會等待
+</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.14.1.</span> <span class="toc-text">
+兩個期望副本，只有一個能排入
+</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.15.</span> <span class="toc-text">
+執行階段與就緒條件分開看
+</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.15.1.</span> <span class="toc-text">
+Running 期間，Ready 可以來回變化
+</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.16.</span> <span class="toc-text">
+三種 Running 但未 Ready 的情境
+</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/Mind/2026/10/01/K8S-resource-adjust/" title="Resource-adjust"><img src="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" onerror="this.onerror=null;this.src='/Mind/img/404.jpg'" alt="Resource-adjust"/></a><div class="content"><a class="title" href="/Mind/2026/10/01/K8S-resource-adjust/" title="Resource-adjust">Resource-adjust</a><time datetime="2026-10-01T00:30:00.000Z" title="Created 2026-10-01 08:30:00">2026-10-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mind/2026/10/01/K8S-resource-adjust-pure/" title="Resource-adjust"><img src="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" onerror="this.onerror=null;this.src='/Mind/img/404.jpg'" alt="Resource-adjust"/></a><div class="content"><a class="title" href="/Mind/2026/10/01/K8S-resource-adjust-pure/" title="Resource-adjust">Resource-adjust</a><time datetime="2026-10-01T00:30:00.000Z" title="Created 2026-10-01 08:30:00">2026-10-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mind/2026/09/28/K8S-CDN-Header-Lost/" title="CDN-Header-Lost"><img src="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" onerror="this.onerror=null;this.src='/Mind/img/404.jpg'" alt="CDN-Header-Lost"/></a><div class="content"><a class="title" href="/Mind/2026/09/28/K8S-CDN-Header-Lost/" title="CDN-Header-Lost">CDN-Header-Lost</a><time datetime="2026-09-28T02:03:00.000Z" title="Created 2026-09-28 10:03:00">2026-09-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mind/2026/09/22/Metrix-grafana-1/" title="監控基礎架構"><img src="https://pub-d7e550ef212547d888a6e01348459946.r2.dev/ethic/metric/grafana.png" onerror="this.onerror=null;this.src='/Mind/img/404.jpg'" alt="監控基礎架構"/></a><div class="content"><a class="title" href="/Mind/2026/09/22/Metrix-grafana-1/" title="監控基礎架構">監控基礎架構</a><time datetime="2026-09-22T00:29:00.000Z" title="Created 2026-09-22 08:29:00">2026-09-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mind/2026/09/19/K8S-worker-pod-cpu-memory/" title="worker-pod-cpu-memory"><img src="https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png" onerror="this.onerror=null;this.src='/Mind/img/404.jpg'" alt="worker-pod-cpu-memory"/></a><div class="content"><a class="title" href="/Mind/2026/09/19/K8S-worker-pod-cpu-memory/" title="worker-pod-cpu-memory">worker-pod-cpu-memory</a><time datetime="2026-09-19T07:40:00.000Z" title="Created 2026-09-19 15:40:00">2026-09-19</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://raw.githubusercontent.com/CHI-KEKE/pics/refs/heads/main/Devops/k8s/k8s2.png);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2024 - 2026 By Yo-Lin</span></div><div class="footer_custom_text">What you'll find out there is boundless freedom !</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/Mind/js/utils.js?v=5.5.5-b1"></script><script src="/Mind/js/main.js?v=5.5.5-b1"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

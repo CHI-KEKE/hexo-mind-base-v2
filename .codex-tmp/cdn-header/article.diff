@@ -1,0 +1,978 @@
+--- original.md
+
++++ CDN-Header-Lost.md
+
+@@ -11,505 +11,489 @@
+
+ comments :
+ ---
+ 
+-
+-{% tabs CDN-Header-Lost%}
+-
+-
+-
++{% tabs CDN-Header-Lost %}
+ 
+ <!-- tab 狀況發生!-->
+ 
+-
+-
+-CDN → ALB → EKS Header 遺失排查
+-
+-透過 CDN 打 API 後，Header 在抵達 Pod 前消失的排查流程。
+-
+-
+-<!-- endtab -->
+-
+-
+-
++<style>
++.kubernetes-helm{--kh-blue:#326de6;--kh-link:#2455b5;--kh-bg:#fff;--kh-ink:#333;--kh-soft:#eef4ff;--kh-line:#d5deed;--kh-code:#182235;--kh-code-ink:#f3f6fc;background:var(--kh-bg);color:var(--kh-ink);padding:24px;font-family:'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.85;overflow-wrap:anywhere;}
++.kubernetes-helm *{box-sizing:border-box;}
++#article-container .kubernetes-helm h2,#article-container .kubernetes-helm h3,.kubernetes-helm h2,.kubernetes-helm h3{color:var(--kh-ink);line-height:1.4;font-weight:800;margin:0 0 16px;}
++.kubernetes-helm p{margin:12px 0;}
++.kubernetes-helm a{color:var(--kh-link);text-decoration:underline;text-underline-offset:3px;}
++.kubernetes-helm :focus-visible{outline:3px solid var(--kh-link);outline-offset:4px;}
++.kubernetes-helm code{font-family:Consolas,monospace;background:var(--kh-soft);color:inherit;padding:2px 5px;border-radius:3px;}
++.kubernetes-helm .kh-hero{padding:28px 0 32px;margin-bottom:28px;border-bottom:3px solid var(--kh-blue);}
++.kubernetes-helm .kh-emblem{display:block;width:58px;height:58px;margin-bottom:20px;background:var(--kh-blue);clip-path:polygon(50% 0,89% 19%,99% 61%,72% 96%,28% 96%,1% 61%,11% 19%);}
++.kubernetes-helm .kh-hero h2{font-size:clamp(1.6rem,4vw,2.6rem);letter-spacing:-.02em;}
++.kubernetes-helm .kh-hero p{max-width:42em;}
++.kubernetes-helm .kh-section{padding-left:14px;border-left:5px solid var(--kh-blue);margin-top:30px;}
++.kubernetes-helm .kh-note{padding:16px 20px;margin:22px 0;background:var(--kh-soft);border-left:4px solid var(--kh-blue);border-radius:4px;}
++.kubernetes-helm .kh-table-scroll{max-width:100%;overflow-x:auto;margin:22px 0;}
++#article-container .kubernetes-helm table.kh-table,.kubernetes-helm table.kh-table{width:100%;margin:0;border-collapse:collapse;table-layout:auto;background:var(--kh-bg);color:var(--kh-ink);}
++.kubernetes-helm .kh-table th,.kubernetes-helm .kh-table td{padding:12px 16px;border:1px solid var(--kh-line);text-align:left;vertical-align:top;background:var(--kh-bg);color:var(--kh-ink);}
++.kubernetes-helm .kh-table th{background:var(--kh-soft);font-weight:700;}
++.kubernetes-helm .kh-code{margin:24px 0;background:var(--kh-code);color:var(--kh-code-ink);border-radius:4px;overflow:hidden;}
++.kubernetes-helm .kh-code-label{padding:8px 16px;border-bottom:1px solid #43516a;font-size:.85rem;}
++#article-container .kubernetes-helm pre.kh-pre,.kubernetes-helm pre.kh-pre{margin:0!important;padding:18px!important;background:var(--kh-code)!important;color:var(--kh-code-ink)!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;white-space:pre!important;overflow-x:auto!important;font:14px/1.8 Consolas,monospace!important;}
++.kubernetes-helm pre.kh-pre code{background:transparent;color:inherit;padding:0;}
++[data-theme='dark'] .kubernetes-helm{--kh-blue:#7fa9ff;--kh-link:#a4c2ff;--kh-bg:#17202e;--kh-ink:#eef2f8;--kh-soft:#23334e;--kh-line:#52647f;}
++@media(max-width:600px){.kubernetes-helm{padding:16px;}.kubernetes-helm .kh-hero{padding:16px 0 24px;}.kubernetes-helm .kh-note{padding:14px;}.kubernetes-helm .kh-table th,.kubernetes-helm .kh-table td{padding:10px;min-width:8em;}}
++
++#article-container .kubernetes-helm table.kh-table{width:auto;max-width:100%;}
++.kubernetes-helm .kh-diagram{overflow-x:auto;border:1px solid var(--kh-line);border-radius:4px;margin:22px 0;padding:16px;background:var(--kh-bg);}
++.kubernetes-helm .kh-diagram .mermaid{min-width:540px;}
++.kubernetes-helm .kh-diagram svg{min-width:540px;max-width:none!important;}
++.kubernetes-helm .kh-diagram p{font-size:.9em;color:var(--kh-ink);}
++#article-container .kubernetes-helm .kh-diagram svg{background:var(--kh-bg)!important;}
++#article-container .kubernetes-helm .kh-diagram svg .node rect{fill:var(--kh-soft)!important;stroke:var(--kh-blue)!important;}
++#article-container .kubernetes-helm .kh-diagram svg .nodeLabel,#article-container .kubernetes-helm .kh-diagram svg .nodeLabel p,#article-container .kubernetes-helm .kh-diagram svg .nodeLabel span{color:var(--kh-ink)!important;fill:var(--kh-ink)!important;}
++#article-container .kubernetes-helm .kh-diagram svg .cluster rect{fill:var(--kh-bg)!important;stroke:var(--kh-line)!important;}
++#article-container .kubernetes-helm pre.kh-pre{tab-size:4;}
++.kubernetes-helm .kh-section{margin-top:32px!important;}
++@media(max-width:600px){.kubernetes-helm{padding:12px;}.kubernetes-helm .kh-diagram{padding:8px;}.kubernetes-helm .kh-table th,.kubernetes-helm .kh-table td{min-width:7em;}}
++</style>
++
++<div class="kubernetes-helm">
++
++<div class="kh-hero"><span class="kh-emblem" aria-hidden="true"></span><h2>CDN → ALB → EKS Header 遺失排查</h2><p>呼叫 API 時明明帶了 Header，後端卻讀不到。請求在抵達程式前會經過多層代理，先找出哪一段沒有傳到，再檢查那一層的設定。</p></div>
++
++<p>本文沿著 CDN、ALB 與 EKS 的請求路徑，整理 Header 轉發規則、路由關係與檢查指令。</p>
++
++<div class="kh-note"><p>目前是排查筆記，尚未確認根因。文中的兩台 EC2 Instance 與 32080 port 來自原始觀察紀錄；實際 Service、Ingress Controller 與遺失的 Header 仍需以現場設定及同一筆請求的紀錄確認。</p></div>
++
++</div>
++<!-- endtab -->
+ 
+ <!-- tab 架構-->
+ 
+-
+-CDN → ALB → EKS 是現代 Web / API 系統很常見的 AWS 架構之一，尤其是服務跑在 Kubernetes / EKS 時
+-
+-
+-```bash
+-使用者 Browser / App
+-        │
+-        ▼
+-┌─────────────────┐
+-│ CDN / CloudFront│  ← 對外入口、快取、WAF、防護
+-└────────┬────────┘
+-         │ HTTP Request + Headers
+-         ▼
+-┌─────────────────┐
+-│      ALB        │  ← Load Balancer、路由、TLS
+-└────────┬────────┘
+-         │ HTTP Request + Headers
+-         ▼
+-┌─────────────────┐
+-│      EKS        │
+-│                 │
+-│ Pod   Pod   Pod │  ← 真正執行 API
+-└─────────────────┘
+-
+-```
+-
+-
+-
+-Header 在這條路徑的任一節點都可能被丟棄。
+-
+-
+-
+-<!-- endtab -->
+-
+-
+-
++<div class="kubernetes-helm">
++
++<h3 class="kh-section">先辨認請求經過哪些層</h3>
++
++<p>CDN → ALB → EKS 可用於部署在 AWS 的 Web／API 服務。CloudFront 是對外入口，可提供快取並整合 WAF；ALB 負責負載平衡、路由與 TLS；EKS 內的 Pod 執行 API。</p>
++
++<h4>請求路徑與系統邊界</h4>
++<div class="kh-diagram">
++
++{% mermaid %}
++flowchart TB
++Client["使用者 Browser / App"] -->|HTTP Request + Headers| CDN["CDN / CloudFront：入口與快取"]
++CDN -->|需要回源時| ALB["ALB：路由、負載平衡與 TLS"]
++subgraph Cluster["EKS：應用程式執行環境"]
++Pod["API Pods"]
++end
++ALB -->|經已設定的叢集入口| Pod
++{% endmermaid %}
++
++</div>
++<p>由上往下閱讀。箭頭代表請求方向；叢集內的實際路由留到 EKS 分頁展開，這張圖不假設一定存在 NGINX。</p>
++
++<p>沿途代理可能依各自規則篩選或改寫 Header。EKS 是執行環境，真正需要檢查的是入口代理與應用程式的處理行為。</p>
++
++<div class="kh-note"><p>CloudFront 命中快取時，該次讀取可能直接由邊緣回應，沒有新的請求抵達 Pod。排查時先確認請求確實回源，避免把「未回源」判成「Header 被刪除」。</p></div>
++
++</div>
++<!-- endtab -->
+ 
+ <!-- tab CloudFront Origin Request Policy-->
+ 
+-
+-CloudFront 可以直接把 S3、ALB 等 AWS 資源當作 Origin，IAM、憑證、WAF、Route 53、監控等也都在 AWS 生態系裡，所以維運上比較方便。
+-
+-
+-CloudFront 收到瀏覽器的 request 後，不會預設把所有 viewer request 的 Header 全部原樣送到 Origin。哪些 Header 要送到 Origin，主要由 Cache Policy + Origin Request Policy 決定。AWS 官方文件也明確說，除了 CloudFront 自動包含的資訊外，其他 viewer headers、query strings、cookies 預設不會包含在 origin request
+-
+-
+-```
+-CloudFront → Distributions → 選 Distribution
++<div class="kubernetes-helm">
++
++<h3 class="kh-section">回源資料與快取識別分開檢查</h3>
++
++<p>CloudFront 可以把 S3、ALB 等資源設為 Origin，並與 IAM、憑證、WAF、Route 53 及監控服務整合。收到 viewer request 後，CloudFront 不會無條件把所有 Header、query string 與 cookie 原樣送往 Origin。</p>
++
++<div class="kh-table-scroll" role="region" aria-label="設定比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">設定</th><th scope="col">回答的問題</th><th scope="col">與回源的關係</th></tr></thead>
++<tbody>
++
++<tr><td>Cache Policy</td><td>哪些值讓回應視為不同快取？</td><td>納入 Cache Key 的 Header、query string 與 cookie 也會送往 Origin。</td></tr>
++
++<tr><td>Origin Request Policy</td><td>還有哪些資料需要送到 Origin？</td><td>可額外轉發資料，而不把這些欄位加入 Cache Key。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p>兩種 Policy 必須一起看。不能只看 Origin Request Policy 的白名單，就斷定某個 Header 不會被轉發。<a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/understanding-how-origin-request-policies-and-cache-policies-work-together.html">AWS：兩種 Policy 如何配合</a></p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>AWS Console 檢查位置</span></div>
++<pre class="kh-pre">CloudFront → Distributions → 選 Distribution
+ → Behaviors → 選 Path Pattern → Edit
+ → Cache key and origin requests
+-  → Origin request policy
+-```
+-
+-
+-
+-> ⚠️ **Cache policy** 與 **Origin request policy** 是不同的，要看的是 **Origin request policy**
+-
+-
+-例如 `GET /products/123`
+-
+-User A: Accept-Language: zh-TW
+-
+-User B: Accept-Language: en-US
+-
+-假設 API 會根據 Accept-Language 回傳不同內容，那 CloudFront 就必須知道 `/products/123 + zh-TW` 跟 `/products/123 + en-US` 是否應該被視為不同 Cache。
+-
+-所以 CloudFront 把兩件事情拆開
+-
+-
+-```bash
+-                 CloudFront
+-                     │
+-        ┌────────────┴────────────┐
+-        │                         │
+-   Cache Policy          Origin Request Policy
+-        │                         │
+-        ▼                         ▼
+-哪些值影響 Cache Key       哪些值送給 Origin
+-```
+-
+-
+-例如 X-Request-Id 後端可能需要它來 trace request，但你完全不希望
+-
+-
+-- X-Request-Id: aaa
+-- X-Request-Id: bbb
+-- X-Request-Id: ccc
+-
+-
+-
+-產生三份不同 cache。因此可以設定成 Cache Policy 不要包含 X-Request-Id
+-
+-```bash
+-Origin Request Policy
+-    ↓
+-Forward X-Request-Id
+-
+-```
+-
+-結果就是
+-
+-
+-```bash
+-Browser
+-   │
+-   │ X-Request-Id: abc123
+-   ▼
+-CloudFront
+-   │
+-   ├── Cache Key：不考慮它
+-   │
+-   └── Origin Request：帶著它
+-                ↓
+-               ALB
+-                ↓
+-               EKS
+-```
+-
+-這就是要把 Cache Policy 和 Origin Request Policy 分開的核心原因
+-
+-
+-
+-
+-
+-自訂 Header 例如 Webhook / API Header
+-
+-
+-| Header | 用途 |
+-|--------|------|
+-| `X-GitHub-Event` | GitHub Webhook 事件類型 |
+-| `X-Hub-Signature-256` | GitHub Webhook HMAC 驗證 |
+-| `X-Gitlab-Event` | GitLab Webhook 事件類型 |
+-| `X-Gitlab-Token` | GitLab Webhook Token 驗證 |
+-| `Authorization` | API 授權（CloudFront 預設不轉發） |
+-
+-
+-建立自訂 Origin request policy，把所需 Header 全部加進去或改用內建 `Managed-AllViewer` policy（轉發所有 Header，但會影響快取效率）
+-
+-
+-
+-另外 CloudFront 是透過 Origin（來源站）設定 指向 ALB 的，在 AWS 建立 ALB 後，會得到一個 DNS Name，例如 `my-alb-123456.ap-northeast-1.elb.amazonaws.com`，接著 CloudFront Distribution 裡設定一個 `Origin domain -> my-alb-123456.ap-northeast-1.elb.amazonaws.com`，而 `Behavior` 這個設定就是 「什麼 Request 要去哪個 Origin？」，例如一個 Distribution 可以有
+-
+-```bash
+-CloudFront
+-│
+-├─ Origin A
+-│    └─ S3
+-│
+-└─ Origin B
+-     └─ ALB
+-```
+-
+-Behavior 再決定 `/images/*` 去 `S3 Origin`，而 `/api/*` 去 `ALB Origin`
+-
+-
+-
+-
+-
+-<!-- endtab -->
+-
+-
+-
++  → Cache policy
++  → Origin request policy</pre>
++</div>
++
++<h3 class="kh-section">案例：相同商品，不同語系</h3>
++
++<p>假設 API 根據 <code>Accept-Language</code> 回傳不同內容，兩筆 <code>GET /products/123</code> 就可能需要不同的快取識別。</p>
++
++<div class="kh-table-scroll" role="region" aria-label="請求比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">請求</th><th scope="col">Header</th><th scope="col">快取識別示意</th></tr></thead>
++<tbody>
++
++<tr><td>User A</td><td><code>Accept-Language: zh-TW</code></td><td><code>/products/123 + zh-TW</code></td></tr>
++
++<tr><td>User B</td><td><code>Accept-Language: en-US</code></td><td><code>/products/123 + en-US</code></td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p>這個案例將語系納入 Cache Policy，才能區分兩份內容。只把語系送往 Origin，而沒有區分快取，不能保證每次取得正確語系。</p>
++
++<h3 class="kh-section">案例：Request ID 只用來追蹤</h3>
++
++<p><code>X-Request-Id: aaa</code>、<code>X-Request-Id: bbb</code>、<code>X-Request-Id: ccc</code> 代表三筆請求，但不一定代表三份不同內容。後端需要追蹤識別值時，可由 Origin Request Policy 轉發 <code>X-Request-Id</code>，Cache Policy 則不包含它。</p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>回源時的 Request ID</span></div>
++<pre class="kh-pre">Browser: X-Request-Id: abc123
++CloudFront Cache Key: 不包含 X-Request-Id
++CloudFront Origin Request: X-Request-Id: abc123
++ALB → EKS: 繼續檢查同一個識別值</pre>
++</div>
++
++<p>此例描述需要回源時的行為；命中快取時，後端不一定會收到這筆 Request ID。</p>
++
++<h3 class="kh-section">Webhook 與授權 Header</h3>
++
++<div class="kh-table-scroll" role="region" aria-label="Header比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">Header</th><th scope="col">用途</th></tr></thead>
++<tbody>
++
++<tr><td><code>X-GitHub-Event</code></td><td>GitHub Webhook 事件類型</td></tr>
++
++<tr><td><code>X-Hub-Signature-256</code></td><td>GitHub Webhook HMAC 驗證</td></tr>
++
++<tr><td><code>X-Gitlab-Event</code></td><td>GitLab Webhook 事件類型</td></tr>
++
++<tr><td><code>X-Gitlab-Token</code></td><td>GitLab Webhook Token 驗證</td></tr>
++
++<tr><td><code>Authorization</code></td><td>API 授權，需另行檢查 CloudFront 的特殊轉發規則</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p>一般自訂 Header 可加入自訂 Origin Request Policy，或視需求採用 <code>Managed-AllViewer</code>。轉發全部 viewer headers 不等於把全部 Header 加入 Cache Key，不能直接推論會產生更多快取項目。</p>
++
++<div class="kh-note"><p>Authorization 不能加入 Origin Request Policy 的個別 Header 白名單。可把它納入 Cache Policy；若停用快取，可使用 AllViewer 或 AllViewerExceptHostHeader 轉發。後者會改用 Origin 的 Host，必須確認 ALB／Ingress 的 Host 路由相容。需要依身分授權的內容，也必須避免不同使用者共用不適當的快取。</p></div>
++
++<p><a href="https://repost.aws/knowledge-center/cloudfront-authorization-header">AWS：Authorization 轉發方式</a>；<a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html">AWS：Managed Origin Request Policies</a></p>
++
++<h3 class="kh-section">Origin 與 Behavior 決定送往哪裡</h3>
++
++<p>建立 ALB 後會取得 DNS Name，例如 <code>my-alb-123456.ap-northeast-1.elb.amazonaws.com</code>。在 CloudFront Origin 的 <code>Origin domain</code> 填入此名稱，即可將該 ALB 設為來源站；HTTPS 回源時仍需確認憑證與使用的主機名稱相符。</p>
++
++<h4>依 Path Pattern 選擇 Origin</h4>
++<div class="kh-diagram">
++
++{% mermaid %}
++flowchart TB
++CF["CloudFront Distribution"] -->|/images/*| S3["Origin A：S3"]
++CF -->|/api/*| ALB["Origin B：ALB"]
++{% endmermaid %}
++
++</div>
++<p>箭頭標示 Behavior 的 Path Pattern。這是兩條指定規則的示例，未畫出其他規則與 Default Behavior；實際排查需確認請求命中哪條規則及其 Policy。</p>
++
++</div>
++<!-- endtab -->
+ 
+ <!-- tab ALB Listener Rules-->
+ 
+-
+-```bash
+-Browser
+-   ↓
+-CloudFront
+-   │ Origin = xxx.elb.amazonaws.com
+-   ↓
+-ALB
+-
+-```
+-
+-ALB 收到 request 之後，第一個要處理的就是 `Listener`，而 `Listener` 就是「ALB 要在哪個 Port 接 Request」
+-
+-```bash
+-ALB
+-│
+-├── Listener :80  HTTP
+-│
+-└── Listener :443 HTTPS
+-```
+-
+-
+-而 `Listener Rule` 是「這個 Request 應該送去哪裡」，例如 EKS 裡有很多服務
+-
+-
+-```bash
+-ALB :443
+-   │
+-   ├─ /api/orders/*
+-   │       ↓
+-   │   Order Target Group
+-   │
+-   ├─ /api/members/*
+-   │       ↓
+-   │   Member Target Group
+-   │
+-   └─ /api/products/*
+-           ↓
+-       Product Target Group
+-```
+-
+-
+-
+-一般情況下，ALB 會把收到的 request headers 繼續送給 Target，不需要像 CloudFront 那樣建立 Origin Request Policy，而 ALB 自己也會動一些 Header，ALB 雖然通常保留收到的 Header，但它作為 HTTP reverse proxy / load balancer，會新增或處理部分 Header。最經典的是 X-Forwarded-For、X-Forwarded-Proto、X-Forwarded-Port
+-
+-```bash
+-X-Forwarded-For: 203.0.113.10
+-X-Forwarded-Proto: https
+-X-Forwarded-Port: 443
+-```
+-
+-X-Forwarded-For 的本質意義是讓後端知道這個 HTTP Request 原本是從哪個 Client IP 來的，以及中途可能經過哪些 Proxy。但 X-Forwarded-For 的實際內容要特別注意，因為前面已經有 CloudFront 等 proxy 時，它可能形成一串 IP，而 ALB 對 X-Forwarded-For 也有 append / preserve / remove 的設定。AWS 預設是 append，因此後端不能簡單假設「看到的唯一 IP 就一定是 Client IP」。
+-
+-
+-
+-
+-**Console 路徑：**
+-```
+-EC2 → Load Balancers → 選 ALB → Listeners → 查 Rules
+-```
+-
+-確認 Rules 中沒有 `remove header` action，ALB 本身通常不會主動刪除 Header
+-
+-
+-
+-<!-- endtab -->
+-
+-
+-
+-
+-<!-- tab Step 3 — EKS Ingress Controller Annotations-->
+-
+-
+-
+-EKS = AWS 提供的 Managed Kubernetes（受管 Kubernetes）服務，假設完全自己架 Kubernetes，需要自己處理 Control Plane 的建置、高可用、版本升級、故障處理等
+-
+-
+-
+-
+-```bash
+-你自己管理 Kubernetes
+-│
+-├── Control Plane
+-│   ├── kube-apiserver
+-│   ├── etcd
+-│   ├── scheduler
+-│   └── controller manager
+-│
+-└── Worker Nodes
+-    ├── Node A
+-    ├── Node B
+-    └── Node C
+-```
+-
+-
+-換成 Amazon EKS，AWS 幫你管理 Kubernetes Control Plane，但使用者仍然需要考慮
+-
+-- Deployment
+-- Service
+-- Ingress
+-- Pod
+-- CPU / Memory requests & limits
+-- HPA
+-- Node Group
+-- IAM
+-- Security Group
+-- Kubernetes 版本升級
+-- Container Image
+-- Monitoring
+-...
+-
+-
+-
+-```bash
+-             EKS
+-              │
+-     ┌────────┴────────┐
+-     │                 │
+-Control Plane       Worker
+-     │               Nodes
+-     │                 │
+- AWS 管理         你仍需要管理*
+-                       │
+-                 ┌─────┼─────┐
+-                 ▼     ▼     ▼
+-               Node  Node  Node
+-                 │
+-                Pods
+-```
+-
+-
+-到這裡，我們再叵悉一下架構
+-
+-
+-
+-AWS Load Balancer Controller 負責把 Kubernetes 世界裡動態變化的 Pod 和 AWS 世界裡的 Target Group 串起來。這也是為什麼在 AWS Console 看 Target Group 時，可能會發現裡面的 10.x.x.x targets 過一陣子有所變化，Pod 被重新建立後，Target Group 也會跟著更新
+-
+-
+-
+-以我目前查詢的 Target Group 為例，他的 Target Type 是 Instance，表示 ALB 正在把流量送到兩台 EC2 Instance 並且是 32080 port，32080 落在 Kubernetes 預設 NodePort 範圍 30000–32767 內，所以這兩個 Instance 是 EKS Worker Nodes，而 32080 是某個 Kubernetes Service 暴露的 NodePort
+-
+-
+-```bash
+-CloudFront
+-     ↓
+-ALB :443
+-     ↓
+-Listener Rule
+-     ↓
+-Target Group
+-     ↓
+-┌─────────────────────────┐
+-│                         │
+-▼                         ▼
+-EC2 Worker Node A       EC2 Worker Node B
+-:32080                  :32080
+-│                         │
+-└────────────┬────────────┘
+-             ↓
+-     Kubernetes Service
+-        (NodePort)
+-             ↓
+-     Ingress Controller
+-             ↓
+-      Ingress Rules
+-             │
+-      ┌──────┼───────┐
+-      ↓      ↓       ↓
+-  Shopping Payment  Member
+-   Service Service  Service
+-      ↓      ↓       ↓
+-     Pods   Pods    Pods
+-```
+-
+-
+-這個 ALB 很可能是在把不同 domain 的流量統一送進 Kubernetes 的 Ingress Controller。真正的 Shopping、Payment 等服務分流，可以在 Kubernetes Ingress Controller 那一層進行
+-
+-
+-Kubernetes 的每個 Resource 都可以有 metadata，其中就包含 annotations，他是附加在 Kubernetes Resource 上的 Key-Value 設定資訊，讓特定 Controller 或工具讀取並採取相應行為
+-
+-
+-EKS Ingress Controller Annotations 指的就是在 Kubernetes 的 Ingress 資源上，透過 metadata.annotations 加入額外設定，讓對應的 Ingress Controller 知道該如何處理流量、建立路由，或設定 AWS 資源。
+-
+-
+-到這一步，為了查看有沒有影響 Header 的 annotation 在 K8S Resouorce 上，我們需要連線到 AWS EKS 查看，最標準的方式是 AWS CLI 取得 EKS 連線資訊 → 寫進 kubeconfig → kubectl 連線
+-
+-
+-
+-```bash
+-你的 Windows
+-    │
+-    │ AWS CLI 驗證身分
+-    ▼
+-AWS / IAM
+-    │
+-    │ aws eks update-kubeconfig
+-    ▼
+-~/.kube/config
+-    │
+-    ▼
+-kubectl
+-    │
+-    ▼
+-EKS Kubernetes API Server
+-
+-```
+-
+-
+-
+-```bash
+-## 先確認 AWS CLI
+-aws --version
+-
+-## 確認「你現在是用哪個 AWS 身分」 成功，會看到 Account、Arn 等資訊
++<div class="kubernetes-helm">
++
++<h3 class="kh-section">Listener 接收連線，Rule 決定去向</h3>
++
++<p>CloudFront 的 Origin 指向 <code>xxx.elb.amazonaws.com</code> 時，請求會送到該 ALB。Listener 定義接收連線的 port 與協定，例如 <code>:80 HTTP</code> 或 <code>:443 HTTPS</code>；Listener Rule 再依條件決定路由。</p>
++
++<h4>ALB 的 Path 路由示例</h4>
++<div class="kh-diagram">
++
++{% mermaid %}
++flowchart TB
++L["ALB Listener :443"] -->|/api/orders/*| O["Order Target Group"]
++L -->|/api/members/*| M["Member Target Group"]
++L -->|/api/products/*| P["Product Target Group"]
++{% endmermaid %}
++
++</div>
++<p>三條箭頭代表不同 Path 條件，不是依序呼叫三個服務。未列出的請求由其他規則或 Default Rule 處理。</p>
++
++<p>一般情況下，ALB 會繼續轉發收到的 request headers，不需要 CloudFront 的 Origin Request Policy。不過它仍會新增或處理部分 Header，不能把 ALB 視為完全不改動 HTTP 的通道。</p>
++
++<div class="kh-table-scroll" role="region" aria-label="Header比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">Header</th><th scope="col">示例</th><th scope="col">解讀方式</th></tr></thead>
++<tbody>
++
++<tr><td><code>X-Forwarded-For</code></td><td><code>203.0.113.10</code></td><td>記錄來源／代理鏈；ALB 預設 append，可設 preserve 或 remove。</td></tr>
++
++<tr><td><code>X-Forwarded-Proto</code></td><td><code>https</code></td><td>連到 ALB 時使用的協定；前面有 CloudFront 時，不能直接當成 viewer 端協定。</td></tr>
++
++<tr><td><code>X-Forwarded-Port</code></td><td><code>443</code></td><td>連到 ALB 的目的 port；不一定等於最外層呼叫使用的 port。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p>前面有 CloudFront 等代理時，<code>X-Forwarded-For</code> 可能是一串 IP。ALB 預設追加上一跳來源，後端應依受信任代理鏈解讀，不可把唯一 IP 或最左側值無條件當成真實 Client IP。<a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html">AWS：X-Forwarded Headers</a></p>
++
++<h3 class="kh-section">檢查 Rule 與 Header 相關屬性</h3>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>AWS Console 檢查位置</span></div>
++<pre class="kh-pre">EC2 → Load Balancers → 選 ALB → Listeners → 查 Rules</pre>
++</div>
++
++<p>先確認命中的 Rule 是否導向預期 Target Group。ALB 沒有通用的 <code>remove header</code> Listener Rule action，因此不應把尋找此 action 當成排查步驟。<a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/rule-action-types.html">AWS：Listener Rule actions</a></p>
++
++<div class="kh-table-scroll" role="region" aria-label="檢查項目比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">檢查項目</th><th scope="col">與 Header 的關係</th></tr></thead>
++<tbody>
++
++<tr><td><code>routing.http.drop_invalid_header_fields.enabled</code></td><td>啟用時會丟棄不符合 ALB Header 名稱規則的欄位。</td></tr>
++
++<tr><td><code>routing.http.xff_header_processing.mode</code></td><td>控制 X-Forwarded-For 的 append／preserve／remove。</td></tr>
++
++<tr><td><code>routing.http.preserve_host_header.enabled</code></td><td>控制是否保留原始 Host，影響後續 Host 路由判讀。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p><a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html">AWS：ALB 屬性與 Header 名稱規則</a>；<a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-load-balancer-attributes.html">AWS：Host Header preservation</a></p>
++
++</div>
++<!-- endtab -->
++
++<!-- tab Step 3：EKS Ingress Controller Annotations-->
++
++<div class="kubernetes-helm">
++
++<h3 class="kh-section">先分清 EKS 與應用程式的管理責任</h3>
++
++<p>Amazon EKS 是 AWS 提供的受管 Kubernetes 服務。自行架設 Kubernetes 時，Control Plane 的建置、高可用、版本升級與故障處理都需自行負責；使用 EKS 後，由 AWS 維運受管 Control Plane，應用程式與叢集使用方式仍需規劃。</p>
++
++<div class="kh-table-scroll" role="region" aria-label="範圍比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">範圍</th><th scope="col">自行架設 Kubernetes</th><th scope="col">使用 Amazon EKS</th></tr></thead>
++<tbody>
++
++<tr><td>Control Plane</td><td>管理 kube-apiserver、etcd、scheduler、controller manager。</td><td>AWS 維運受管 Control Plane；仍需規劃版本升級時機與相容性。</td></tr>
++
++<tr><td>Worker Nodes</td><td>管理 Node A、Node B、Node C 等工作節點。</td><td>EC2 Node Group 仍有節點維護責任；實際責任依運算模式不同。</td></tr>
++
++<tr><td>應用與容量</td><td>管理 Deployment、Service、Ingress、Pod。</td><td>仍需管理上述資源、CPU／Memory requests &amp; limits、HPA 與 Container Image。</td></tr>
++
++<tr><td>權限與觀測</td><td>規劃網路、授權及監控。</td><td>仍需規劃 IAM、Security Group、Monitoring 與 Node Group。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<h3 class="kh-section">Controller 與 Target Type 的差異</h3>
++
++<p>AWS Load Balancer Controller 會依 Kubernetes 資源設定協調 AWS 的負載平衡資源與 targets。它屬於控制層，不是每筆 API 請求都會穿過的 HTTP proxy。</p>
++
++<div class="kh-table-scroll" role="region" aria-label="Target Type比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">Target Type</th><th scope="col">ALB 的直接目標</th><th scope="col">Pod 重建時的解讀</th></tr></thead>
++<tbody>
++
++<tr><td><code>ip</code></td><td>Pod IP 等 IP targets。</td><td>若由 Controller 管理 Pod targets，Pod 重建後，10.x.x.x 等註冊目標可能跟著更新。</td></tr>
++
++<tr><td><code>instance</code></td><td>EC2 Instance 的 Service NodePort。</td><td>不能把 Target Group 的 Instance targets 當成 Pod IP；Pod 變化由叢集內 Service 對應處理。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p><a href="https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/how-it-works.md">AWS Load Balancer Controller：流量模式</a></p>
++
++<h3 class="kh-section">觀察紀錄：兩台 Instance 與 32080</h3>
++
++<p>原始紀錄中的 Target Group 使用 <code>Instance</code>，流量送往兩台 EC2 Instance 的 <code>32080</code> port。這個 port 落在 Kubernetes 預設 NodePort 範圍 <code>30000–32767</code>，符合 Worker Node／NodePort 的可能架構，但仍需比對 EC2 身分與 Service 設定。</p>
++
++<h4>待確認的 NodePort 與 Ingress 拓撲</h4>
++<div class="kh-diagram">
++
++{% mermaid %}
++flowchart TB
++CF["CloudFront"] --> ALB["ALB :443 / Listener Rule"]
++ALB --> TG["Target Group：Instance"]
++TG --> A["EC2 Instance A :32080"]
++TG --> B["EC2 Instance B :32080"]
++A -.-> S["Service NodePort：待確認"]
++B -.-> S
++S -.-> IC["Ingress Controller：待確認"]
++IC -.-> R["Ingress Rules：待確認"]
++R -.-> Shop["Shopping Service → Pods"]
++R -.-> Pay["Payment Service → Pods"]
++R -.-> Member["Member Service → Pods"]
++{% endmermaid %}
++
++</div>
++<p>實線表示原稿記錄的入口關係，虛線表示尚待查證的叢集內路徑。若 NodePort 指向應用 Pod，後面就不會有這層 Ingress Controller；Service 是邏輯路由關係，不是額外 HTTP proxy。</p>
++
++<p>一種可能是 ALB 將不同 domain 的流量統一交給叢集內 Ingress Controller，再分流到 Shopping、Payment、Member 等服務。需先找到 <code>32080</code> 所屬 Service，再查看 selector、EndpointSlice 與 IngressClass，才能確定是否符合這個假設。</p>
++
++<h3 class="kh-section">Annotations 由對應 Controller 解讀</h3>
++
++<p>Kubernetes Resource 的 <code>metadata.annotations</code> 是附加的 Key-Value 資訊。Ingress 上的 annotations 可供對應 Controller 調整路由或 AWS 資源，但不同 Controller 的設定不能混為一談。</p>
++
++<div class="kh-table-scroll" role="region" aria-label="設定示例比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">設定示例</th><th scope="col">用途與限制</th></tr></thead>
++<tbody>
++
++<tr><td><code>alb.ingress.kubernetes.io/target-type: instance</code></td><td>AWS Load Balancer Controller 的目標模式，instance 模式需要適用的 NodePort／LoadBalancer Service。</td></tr>
++
++<tr><td><code>alb.ingress.kubernetes.io/actions.*</code></td><td>定義 ALB 自訂 action，需讀取實際 JSON；不是任意刪除 Header 的設定。</td></tr>
++
++<tr><td><code>nginx.ingress.kubernetes.io/proxy-read-timeout: &quot;60&quot;</code></td><td>NGINX Ingress 的讀取逾時示例，不表示會刪除 Header，也不適用於 ALB Controller。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<p><a href="https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/ingress/annotations/">AWS Load Balancer Controller：Annotations</a></p>
++
++<h3 class="kh-section">從 Windows 連線到 EKS</h3>
++
++<p>連線順序是 Windows 上以 AWS CLI 驗證 IAM 身分，再透過 <code>aws eks update-kubeconfig</code> 寫入 <code>~/.kube/config</code>，最後由 <code>kubectl</code> 連線至 EKS Kubernetes API Server。以下是操作範例，佔位符需替換為實際值。</p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>1. 確認工具與 AWS 身分</span></div>
++<pre class="kh-pre">aws --version
+ aws sts get-caller-identity
+-
+-## 如果公司使用 AWS SSO / IAM Identity Center，通常會先有這個
+-aws sso login --profile <公司-profile>
+-
+-aws sts get-caller-identity --profile <公司-profile>
+-
+-
+-## 找到 EKS Cluster 名稱
+-aws eks list-clusters --region <region>
+-
+-
+-## 如果使用 profile
+-aws eks list-clusters --region <region> --profile <profile>
+-
+-
+-## 安裝 kubectl (https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html?utm_source=chatgpt.com)
+-kubectl version --client
+-
+-
+-## 建立 kubeconfig
+-Cluster = public-eks-hk
+-Region  = ap-east-1
+-
++# 使用 AWS SSO / IAM Identity Center 時
++aws sso login --profile &lt;公司-profile&gt;
++aws sts get-caller-identity --profile &lt;公司-profile&gt;</pre>
++</div>
++
++<p>身分查詢成功會回傳 <code>Account</code>、<code>Arn</code> 等資訊。後續指令應持續使用同一個已確認的 profile。</p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>2. 查詢叢集與確認 kubectl</span></div>
++<pre class="kh-pre">aws eks list-clusters --region &lt;region&gt;
++# 使用具名 profile 時
++aws eks list-clusters --region &lt;region&gt; --profile &lt;profile&gt;
++kubectl version --client</pre>
++</div>
++
++<p>若尚未安裝 kubectl，可依 <a href="https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html">AWS：安裝 kubectl</a> 處理。</p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>3. 建立 kubeconfig</span></div>
++<pre class="kh-pre"># 原稿範例：Cluster = public-eks-hk，Region = ap-east-1
+ aws eks update-kubeconfig --region ap-east-1 --name public-eks-hk
+-
+-
+-####　如果公司使用特定 profile，它會更新：C:\Users\<你的帳號>\.kube\config
+-#### https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html?utm_source=chatgpt.com
+-
+-aws eks update-kubeconfig --region ap-east-1 --name public-eks-hk --profile <profile>
+-
+-
+-## 確認現在指向哪個 Cluster
+-## 如果 EKS API Endpoint 是 private-only，電腦還必須能進入公司 VPC 網路，例如透過 VPN
++# 使用具名 profile 時，改用此指令
++aws eks update-kubeconfig --region ap-east-1 --name public-eks-hk --profile &lt;profile&gt;
+ kubectl config current-context
+-
+-
+-kubectl get nodes
+-
+-kubectl get svc -A | Select-String 32080
+-
+-
+-## 檢查 Ingress yaml
+-kubectl get ingress -n <namespace> -o yaml
+-
+-## 確認沒有影響 Header 的 annotation
+-# 這類 annotation 可能操作 Header
+-alb.ingress.kubernetes.io/actions.*
+-
+-
+-## 第一種：AWS ALB 的設定 : alb.ingress.kubernetes.io/target-type: instance
+-
+-## 第二種：NGINX Ingress 的設定 : nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+-
+-```
+-
+-
+-
+-<!-- endtab -->
+-
+-
+-
+-
+-<!-- tab Step 4 — 快速診斷：直接看 Pod 收到的 Header-->
+-
+-
+-## 方法 1：.NET API 加暫時性 Log
+-
+-```csharp
+-// Middleware 或 Controller 裡加這段 debug log
+-var headers = Request.Headers.Select(h => $"{h.Key}={h.Value}");
+-_logger.LogInformation("Received headers: {Headers}", string.Join(", ", headers));
+-```
+-
+-**方法 2：kubectl exec 進 Pod curl 打自己**
+-
+-```bash
+-kubectl exec -it <pod-name> -n <namespace> -- curl -v http://localhost:<port>/api/ping
+-```
+-
+-
+-
+-## 方法 2：部署 httpbin 測試 Pod
+-
+-```bash
+-# 部署 httpbin
+-kubectl run httpbin --image=kennethreitz/httpbin --port=80 -n <namespace>
+-
+-# 打 /headers endpoint，可以直接看 Pod 實際收到的所有 Header
+-curl https://<your-domain>/headers
+-```
+-
+-
+-
+-<!-- endtab -->
+-
+-
+-
++kubectl get nodes</pre>
++</div>
++
++<p>預設會更新 <code>C:/Users/使用者帳號/.kube/config</code>。如果 EKS API Endpoint 是 private-only，電腦必須能連入 VPC，例如透過公司 VPN；IAM 身分驗證成功也不代表已具備 Kubernetes 資源讀取權限。<a href="https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html">AWS：建立 kubeconfig</a></p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>4. 找出 NodePort 對應服務</span></div>
++<pre class="kh-pre">kubectl get svc -A | Select-String 32080
++kubectl get svc &lt;service-name&gt; -n &lt;namespace&gt; -o yaml
++kubectl get endpointslices -n &lt;namespace&gt; -l kubernetes.io/service-name=&lt;service-name&gt; -o yaml
++kubectl get ingressclass
++kubectl get ingress -n &lt;namespace&gt; -o yaml</pre>
++</div>
++
++<p>檢查 Service 的 <code>nodePort</code>、<code>targetPort</code>、<code>selector</code>，再比對 EndpointSlice 與實際 Pods。Ingress 則查看 <code>spec.ingressClassName</code>、Host、Path、backend 與 annotations；如果確認有 NGINX，再檢查該 Controller 的 ConfigMap 及適用的 Header 設定。</p>
++
++</div>
++<!-- endtab -->
++
++<!-- tab Step 4：快速診斷：直接看 Pod 收到的 Header-->
++
++<div class="kubernetes-helm">
++
++<h3 class="kh-section">每種方法驗證的範圍不同</h3>
++
++<div class="kh-table-scroll" role="region" aria-label="方法比較" tabindex="0">
++<table class="kh-table">
++<thead><tr><th scope="col">方法</th><th scope="col">能確認什麼</th><th scope="col">限制</th></tr></thead>
++<tbody>
++
++<tr><td>.NET API 暫時性 Log</td><td>實際請求到達應用程式後，指定 Header 是否存在。</td><td>只代表紀錄位置收到的內容，需與上游同一筆請求對照。</td></tr>
++
++<tr><td>kubectl exec + localhost curl</td><td>Pod 內應用是否接收測試 Header。</td><td>繞過 CloudFront、ALB 與外部 Ingress，不能證明完整路徑正常。</td></tr>
++
++<tr><td>httpbin /headers</td><td>經測試入口送往回顯服務的 Header。</td><td>需先建立 Service 及適用路由，且測試路徑必須符合要驗證的入口設定。</td></tr>
++
++</tbody>
++</table>
++</div>
++
++<h3 class="kh-section">方法 1：.NET API 加暫時性 Log</h3>
++
++<p>在 Controller 的入口，或可存取 Request 的診斷位置，記錄待查 Header。以 Request ID 對照同一筆請求；授權與 Webhook token 只記錄是否存在，避免把憑證值寫入 Log。</p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>Controller 診斷示例</span></div>
++<pre class="kh-pre">var names = new[] { &quot;X-Request-Id&quot;, &quot;X-GitHub-Event&quot;, &quot;X-Gitlab-Event&quot; };
++var headers = Request.Headers
++    .Where(h =&gt; names.Contains(h.Key, StringComparer.OrdinalIgnoreCase))
++    .Select(h =&gt; $&quot;{h.Key}={h.Value}&quot;);
++_logger.LogInformation(&quot;Received headers: {Headers}&quot;, string.Join(&quot;, &quot;, headers));
++_logger.LogInformation(&quot;Authorization present: {Present}&quot;,
++    Request.Headers.ContainsKey(&quot;Authorization&quot;));
++_logger.LogInformation(&quot;GitLab token present: {Present}&quot;,
++    Request.Headers.ContainsKey(&quot;X-Gitlab-Token&quot;));
++_logger.LogInformation(&quot;GitHub signature present: {Present}&quot;,
++    Request.Headers.ContainsKey(&quot;X-Hub-Signature-256&quot;));</pre>
++</div>
++
++<p>範例需引用 <code>System</code> 與 <code>System.Linq</code>。在 Middleware 中改用 <code>context.Request.Headers</code>；若要定位應用內的改寫，需比較相關 Middleware 前後的紀錄。</p>
++
++<h3 class="kh-section">方法 2：kubectl exec 進 Pod 打 localhost</h3>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>Pod 內的局部測試</span></div>
++<pre class="kh-pre">kubectl exec -it &lt;pod-name&gt; -n &lt;namespace&gt; -- curl -v http://localhost:&lt;port&gt;/api/ping
++# 加上可辨識的測試值
++kubectl exec -it &lt;pod-name&gt; -n &lt;namespace&gt; -- curl -v -H &quot;X-Request-Id: local-check-001&quot; http://localhost:&lt;port&gt;/api/ping</pre>
++</div>
++
++<p>容器需要已安裝 curl。<code>curl -v</code> 顯示送出的 Header，仍需搭配應用 Log 或回顯回應，才能確認接收端看到的值；這個方法不經過 CDN／ALB。</p>
++
++<h3 class="kh-section">方法 3：部署 httpbin 測試 Pod</h3>
++
++<p>以下保留原稿的 httpbin image 範例，實際使用前需確認環境允許的來源與版本。此處僅提供操作範例，未對叢集執行部署。</p>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>建立 Pod 與叢集內 Service</span></div>
++<pre class="kh-pre">kubectl run httpbin --image=kennethreitz/httpbin --port=80 -n &lt;namespace&gt;
++kubectl expose pod httpbin --name=httpbin --port=80 --target-port=80 -n &lt;namespace&gt;</pre>
++</div>
++
++<div class="kh-note"><p>建立 Pod 與 Service 不會自動讓外部 /headers 可用。需依實際 IngressClass、Host 與既有入口，將測試路徑導向 httpbin Service，並確認 CloudFront Behavior、ALB Rule 與快取設定涵蓋該路徑。這些現場資訊尚未提供，因此不預填可能導向錯誤入口的 Ingress YAML。</p></div>
++
++<div class="kh-code">
++<div class="kh-code-label"><span>入口路由完成後，再從外部測試</span></div>
++<pre class="kh-pre">curl.exe -v -H &quot;X-Request-Id: edge-check-001&quot; https://&lt;your-domain&gt;/headers</pre>
++</div>
++
++<p>Windows 使用 <code>curl.exe</code>，避免 Windows PowerShell 的 curl alias 改變指令行為；其他 shell 可使用 <code>curl</code>。在回傳 JSON 檢查 <code>X-Request-Id</code>，並確認本次請求回源。診斷端點應限制測試存取，不攜帶真實憑證，使用完畢後移除測試路由與資源。</p>
++
++<p>能在 httpbin 看見 Header，代表該測試路徑有送達，不代表所有 API 路徑都採用同一組 Policy。仍需對照原本失敗請求的 Host、Path、method 與 Header，才能縮小遺失位置。</p>
++
++</div>
++<!-- endtab -->
+ 
+ {% endtabs %}

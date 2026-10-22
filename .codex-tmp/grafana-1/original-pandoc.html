@@ -1,0 +1,277 @@
+<div class="grafana-dusk">
+<div class="gd-hero">
+<span class="gd-brand-line" aria-hidden="true"></span>
+<h2>
+把分散的事件紀錄集中保存
+</h2>
+<p>
+結帳在 10:32 失敗，處理請求的 Pod 卻不一定還在原處。集中保存
+Log，才能跨實例查找當時留下的線索。
+</p>
+</div>
+<h3 class="gd-section">
+Loki 的起源與用途
+</h3>
+<p>
+Loki 是集中儲存、搜尋與分析 Logs 的系統。Grafana Labs 在 2018
+年啟動專案，Tom Wilkie 與 David Kaltschmidt
+的早期設計文件推動了它的誕生，同年底在 KubeCon Seattle
+公開。官方以「Like Prometheus, but for logs.」描述其方向。參考
+<a href="https://grafana.com/events/grafanacon/2020/loki-future/">Loki
+早期設計回顧</a>與
+<a href="https://grafana.com/blog/open-source-log-monitoring-the-concise-guide-to-grafana-loki/">Loki
+五週年介紹</a>。
+</p>
+<p>
+假設 Order API 分散在 Pod A、Pod B、Pod C、Pod D、Pod E。得知「剛剛
+10:32 結帳失敗」時，首先要找出是哪個 Pod 處理，以及該實例的錯誤紀錄。
+</p>
+<div class="gd-note">
+<p>
+Crash 後可能發生 Container Restart，也可能因 Pod 被刪除或替換而讓舊 Pod
+消失；Container 重啟不等於 Pod 一定被替換。只依賴本機 Log
+會受到輪替、節點與 Pod 生命週期影響，因此需要將紀錄送到集中儲存。
+</p>
+</div>
+<h3 class="gd-section">
+Log 寫入路徑：從程式到 Loki
+</h3>
+<div class="gd-diagram" role="region"
+aria-label="Log 寫入路徑：從程式到 Loki" tabindex="0">
+<div class="gd-diagram-inner" style="min-width:350px">
+<div class="mermaid-wrap">
+<pre class="mermaid-src" data-config="{&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#1b1925&quot;, &quot;primaryColor&quot;: &quot;#30283e&quot;, &quot;primaryTextColor&quot;: &quot;#eeeaf4&quot;, &quot;primaryBorderColor&quot;: &quot;#91829f&quot;, &quot;lineColor&quot;: &quot;#b8aec8&quot;, &quot;secondaryColor&quot;: &quot;#252030&quot;, &quot;tertiaryColor&quot;: &quot;#252030&quot;, &quot;clusterBkg&quot;: &quot;#211c2b&quot;, &quot;clusterBorder&quot;: &quot;#756583&quot;, &quot;edgeLabelBackground&quot;: &quot;#1b1925&quot;, &quot;textColor&quot;: &quot;#eeeaf4&quot;, &quot;fontSize&quot;: &quot;16px&quot;, &quot;fontFamily&quot;: &quot;Segoe UI, Microsoft JhengHei, sans-serif&quot;, &quot;actorBkg&quot;: &quot;#30283e&quot;, &quot;actorBorder&quot;: &quot;#91829f&quot;, &quot;actorTextColor&quot;: &quot;#eeeaf4&quot;, &quot;actorLineColor&quot;: &quot;#91829f&quot;, &quot;signalColor&quot;: &quot;#cbc8d5&quot;, &quot;signalTextColor&quot;: &quot;#eeeaf4&quot;, &quot;labelBoxBkgColor&quot;: &quot;#252030&quot;, &quot;labelBoxBorderColor&quot;: &quot;#91829f&quot;, &quot;labelTextColor&quot;: &quot;#eeeaf4&quot;, &quot;loopTextColor&quot;: &quot;#eeeaf4&quot;, &quot;noteBkgColor&quot;: &quot;#30283e&quot;, &quot;noteBorderColor&quot;: &quot;#91829f&quot;, &quot;noteTextColor&quot;: &quot;#eeeaf4&quot;}, &quot;flowchart&quot;: {&quot;htmlLabels&quot;: false, &quot;useMaxWidth&quot;: true, &quot;curve&quot;: &quot;linear&quot;, &quot;nodeSpacing&quot;: 28, &quot;rankSpacing&quot;: 45}, &quot;sequence&quot;: {&quot;useMaxWidth&quot;: true, &quot;mirrorActors&quot;: false, &quot;actorMargin&quot;: 45, &quot;messageMargin&quot;: 35}}" hidden>flowchart TB
+subgraph Node[&quot;Kubernetes Node&quot;]
+subgraph Pod[&quot;Pod / Container&quot;]
+App[&quot;C# Application&quot;] --&gt;|ILogger| Provider[&quot;Logging Provider&quot;]
+Provider --&gt;|Console 輸出| Std[&quot;stdout / stderr&quot;]
+end
+Std --&gt;|交由 Runtime 處理| Runtime[&quot;Container Runtime&quot;]
+Runtime --&gt;|寫入紀錄| Files[&quot;Node 上的 Container Logs&quot;]
+Files --&gt;|讀取| Collector[&quot;Log Collector&quot;]
+Collector --&gt;|附加 metadata / labels| Enriched[&quot;Log 與時間戳記、Labels&quot;]
+end
+subgraph Central[&quot;集中服務&quot;]
+Loki[&quot;Loki API：接收並保存&quot;]
+end
+Enriched --&gt;|HTTP Push Logs| Loki</pre>
+</div>
+</div>
+</div>
+<p>
+由上往下讀，箭頭表示紀錄的傳遞與處理。圖中以 Node 層級 Collector 讀取
+Container Log 為例；Collector 也可能採其他部署或讀取方式。Pod A 至 Pod E
+的紀錄都可經相應收集路徑集中送往 Loki，並非每個 Pod 必須各部署一個
+Collector。
+</p>
+<h3 class="gd-section">
+<ol type="1">
+<li>C# 程式產生 Log
+</h3>
+<div class="gd-code">
+<div class="gd-code-label">
+Worker 的紀錄呼叫
+</div>
+<pre class="gd-pre">_logger.LogInformation(&quot;Start processing ShopId {ShopId}&quot;, shopId);
+_logger.LogError(
+ exception,
+ &quot;Failed to process promotion {PromotionId}&quot;,
+ promotionId);</pre>
+</div>
+<p>
+假設 <code>shopId = 2</code>、<code>promotionId =
+574730</code>，設定好的 Logging Provider
+可能輸出以下文字。日期、等級與格式由 Provider／Formatter 設定決定。
+</p>
+<div class="gd-code">
+<div class="gd-code-label">
+Log 輸出示例
+</div>
+<pre class="gd-pre">08:30:01 INFO  Start processing ShopId 2
+08:30:02 INFO  Loading promotions
+08:30:05 ERROR Failed to process promotion 574730
+08:30:05 ERROR System.TimeoutException...</pre>
+</div>
+<p>
+在 ASP.NET Core 中，同一個 <code>_logger.LogInformation()</code>
+呼叫若搭配帶日期的 Console 格式，可能產生 <code>2026-09-22 08:30:01 INFO
+Start processing ShopId 2</code>。<code>ILogger</code>
+只把紀錄交給設定好的 Provider；執行到這裡不代表 Loki 已收到資料。
+</p>
+<h3 class="gd-section">
+2. Container Runtime 將標準輸出保存為 Node Log
+</h3>
+<p>
+Container／Kubernetes 的常見配置讓程式寫入 <code>stdout</code> 或
+<code>stderr</code>。Container Runtime 處理這些輸出，在 Node 上留下對應
+Log，Kubernetes 可透過下列指令讀取。
+</p>
+<div class="gd-code">
+<div class="gd-code-label">
+讀取 Pod 的 Container Log
+</div>
+<pre class="gd-pre">kubectl logs promotion-worker-abc</pre>
+</div>
+<div class="gd-code">
+<div class="gd-code-label">
+kubectl logs 輸出示例
+</div>
+<pre class="gd-pre">INFO Start processing ShopId 2
+INFO Loading promotions
+ERROR DynamoDB timeout</pre>
+</div>
+<p>
+資料此時仍可能只在 Node 的 Log 路徑中，尚未送入 Loki。參考
+<a href="https://kubernetes.io/docs/concepts/cluster-administration/logging/">Kubernetes
+Logging Architecture</a>。
+</p>
+<h3 class="gd-section">
+3. Collector 讀取紀錄並附加分類
+</h3>
+<p>
+Collector 負責搬運 Log。例如 Grafana Alloy，或其他環境中的 Fluent
+Bit。舊版 Loki 教學也常見 Promtail；官方已標示 Promtail 於 2026-03-02
+結束生命週期。參考
+<a href="https://grafana.com/docs/loki/latest/send-data/promtail/">Promtail
+官方狀態</a>。
+</p>
+<div class="gd-code">
+<div class="gd-code-label">
+Collector 讀取的新紀錄
+</div>
+<pre class="gd-pre">2026-09-22 08:30 INFO Start Job
+2026-09-22 08:31 ERROR Timeout</pre>
+</div>
+<div class="gd-table-scroll" role="region"
+aria-label="Metadata／Label資料表" tabindex="0">
+<table class="gd-table">
+<thead>
+<tr>
+<th scope="col">
+Metadata／Label
+</th>
+<th scope="col">
+示例值
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>namespace</code>
+</td>
+<td>
+<code>production</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>pod</code>
+</td>
+<td>
+<code>promotion-worker-abc</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>container</code>
+</td>
+<td>
+<code>worker</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>service</code>
+</td>
+<td>
+<code>promotion-worker</code>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+上述 Labels 是示例配置，不代表 Collector 自動產生所有欄位。尤其
+<code>service</code> 的命名與映射需要在收集設定中一致。
+</p>
+<h3 class="gd-section">
+4. Collector 透過 HTTP Push 給 Loki
+</h3>
+<div class="gd-table-scroll" role="region" aria-label="傳送內容資料表"
+tabindex="0">
+<table class="gd-table">
+<thead>
+<tr>
+<th scope="col">
+傳送內容
+</th>
+<th scope="col">
+概念示例
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Timestamp
+</td>
+<td>
+<code>2026-09-22 08:30:01</code>
+</td>
+</tr>
+<tr>
+<td>
+Labels
+</td>
+<td>
+<code>service=“promotion-worker”</code>、<code>pod=“promotion-worker-abc”</code>、<code>namespace=“production”</code>
+</td>
+</tr>
+<tr>
+<td>
+Log
+</td>
+<td>
+<code>INFO Start processing ShopId 2</code>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+這是內容概念表，不是可直接提交的 Loki API payload。Collector 依 API
+格式將資料送入 Loki，Loki 才能保存並供後續查詢。
+</p>
+<h3 class="gd-section">
+5. 透過 Grafana 查詢 Loki
+</h3>
+<div class="gd-code">
+<div class="gd-code-label">
+篩選指定服務的錯誤文字
+</div>
+<pre class="gd-pre">{service=&quot;promotion-worker&quot;} |= &quot;ERROR&quot;</pre>
+</div>
+<p>
+這段 <code>LogQL</code> 先選取 <code>service=“promotion-worker”</code>
+的 Log stream，再篩選包含大寫 <code>ERROR</code>
+的紀錄。它是區分大小寫的文字篩選，不會自動判斷所有語意上的錯誤。參考
+<a href="https://grafana.com/docs/loki/latest/query/log_queries/">Loki
+Log queries</a>。
+</p>
+<h3 class="gd-section">
+Log 查詢時序：請求與回傳
+</h3>
+<div class="gd-diagram" role="region"
+aria-label="Log 查詢時序：請求與回傳" tabindex="0">
+<div class="gd-diagram-inner" style="min-width:620px">
+<img class="gd-sequence" src="/Mind/images/grafana-1/loki-query.svg" alt="Log 查詢時序：請求與回傳" width="779" height="293">
+</div>
+</div>
+<p>
+參與者由左至右排列，時間向下。實線是查詢或操作，虛線是結果返回。這張圖只描述成功查詢的概念路徑；Grafana
+是查詢介面，本文架構中的 Log 儲存在 Loki。
+</p>
+</div></li>
+</ol>
+</div>

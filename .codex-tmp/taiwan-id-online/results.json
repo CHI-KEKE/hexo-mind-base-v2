@@ -1,0 +1,297 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "view": "desktop",
+      "tab": 1,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "desktop",
+      "tab": 2,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "view": "desktop",
+      "tab": 3,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "desktop",
+      "tab": 4,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "desktop",
+      "tab": 5,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "desktop",
+      "tab": 6,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 2,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        },
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        },
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "view": "mobile",
+      "tab": 1,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "mobile",
+      "tab": 2,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "view": "mobile",
+      "tab": 3,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "mobile",
+      "tab": 4,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "mobile",
+      "tab": 5,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "mobile",
+      "tab": 6,
+      "mode": "light",
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 2,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        },
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        },
+        {
+          "frame": "rgb(48, 51, 45)",
+          "code": "rgb(48, 51, 45)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "view": "dark",
+      "tab": 1,
+      "mode": "dark",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "dark",
+      "tab": 2,
+      "mode": "dark",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [
+        {
+          "frame": "rgb(37, 41, 35)",
+          "code": "rgb(37, 41, 35)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "view": "dark",
+      "tab": 3,
+      "mode": "dark",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "dark",
+      "tab": 4,
+      "mode": "dark",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "dark",
+      "tab": 5,
+      "mode": "dark",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 0,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [],
+      "arrows": true
+    },
+    {
+      "view": "dark",
+      "tab": 6,
+      "mode": "dark",
+      "visiblePanels": 1,
+      "width": 1500,
+      "viewport": 1500,
+      "svg": 2,
+      "rawTags": false,
+      "syntaxError": false,
+      "codeBackgrounds": [
+        {
+          "frame": "rgb(37, 41, 35)",
+          "code": "rgb(37, 41, 35)"
+        },
+        {
+          "frame": "rgb(37, 41, 35)",
+          "code": "rgb(37, 41, 35)"
+        },
+        {
+          "frame": "rgb(37, 41, 35)",
+          "code": "rgb(37, 41, 35)"
+        }
+      ],
+      "arrows": true
+    }
+  ],
+  "pure": {
+    "hasCode": true,
+    "hasMindmap": true
+  }
+}

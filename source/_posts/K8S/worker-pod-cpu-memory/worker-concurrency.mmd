@@ -1,0 +1,8 @@
+flowchart TD
+subgraph P["單一 Pod"]
+subgraph C["主要 Worker Container"]
+J1["任務甲"] -->|共同耗用| R["CPU limit 1000m / Memory limit 2000Mi"]
+J2["任務乙"] -->|共同耗用| R
+J3["其他並行任務"] -->|共同耗用| R
+end
+end

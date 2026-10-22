@@ -1,0 +1,8 @@
+sequenceDiagram
+participant User as 使用者
+participant Grafana as Grafana Explore
+participant Loki as Loki
+User->>Grafana: 選擇資料來源與時間範圍
+Grafana->>Loki: LogQL Query
+Loki-->>Grafana: Query Result：符合條件的 Logs
+Grafana-->>User: 顯示 Log 清單

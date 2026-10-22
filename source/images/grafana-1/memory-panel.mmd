@@ -1,0 +1,6 @@
+sequenceDiagram
+participant Panel as Grafana Panel
+participant Prom as Prometheus
+Panel->>Prom: PromQL 與時間範圍
+Prom-->>Panel: 時間序列樣本
+Panel->>Panel: 換算顯示單位並繪圖

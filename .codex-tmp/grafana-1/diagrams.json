@@ -1,0 +1,30 @@
+[
+  {
+    "title": "監控系統分工：兩條資料路徑",
+    "source": "flowchart TB\nsubgraph Source[\"應用與基礎設施\"]\nSystem[\"Pod / API / Worker / DB\"]\nend\nsubgraph Storage[\"收集與儲存\"]\nEndpoint[\"Metrics endpoint / Exporter\"]\nCollector[\"Log Collector\"]\nProm[\"Prometheus：指標\"]\nLoki[\"Loki：Log\"]\nEndpoint -->|指標樣本| Prom\nCollector -->|Push Logs| Loki\nend\nsubgraph View[\"查詢與呈現\"]\nGrafana[\"Grafana\"]\nUses[\"Dashboard、Explore、Alerting\"]\nGrafana -->|呈現與評估| Uses\nend\nSystem -->|CPU、Memory、Request 數| Endpoint\nSystem -->|Error、Exception、訊息| Collector\nProm -->|查詢結果| Grafana\nLoki -->|查詢結果| Grafana"
+  },
+  {
+    "title": "記憶體換算：bytes、GiB 與使用率",
+    "source": "flowchart TB\nRaw[\"Container 量測：1,800,000,000 bytes\"] -->|原始 bytes| Convert[\"除以 1024 的三次方\"]\nConvert -->|約 1.6764 GiB| Display[\"顯示值：1.68 GiB\"]\nDisplay -->|除以 Limit，再乘以 100| Ratio[\"顯示值算例：84%\"]\nLimit[\"Memory Limit：2 GiB\"] -->|提供分母| Ratio"
+  },
+  {
+    "title": "記憶體指標：量測、暴露與抓取",
+    "source": "flowchart TB\nsubgraph Measured[\"量測與暴露端\"]\nContainer[\"Pod / Container\"] -->|使用資源| Kernel[\"Linux Kernel / cgroup\"]\nKernel -->|提供原始資訊| Monitor[\"監控元件\"]\nMonitor -->|暴露 Metric| Endpoint[\"Metrics endpoint\"]\nend\nsubgraph Prom[\"Prometheus\"]\nScraper[\"Scrape：定期抓取\"] -->|保存樣本| Store[\"儲存 / PromQL 查詢\"]\nend\nScraper -->|HTTP scrape 請求| Endpoint\nEndpoint -.->|指標樣本回應| Scraper\nGrafana[\"Grafana\"] -->|PromQL 查詢| Store\nStore -.->|查詢結果| Grafana"
+  },
+  {
+    "title": "Log 寫入路徑：從程式到 Loki",
+    "source": "flowchart TB\nsubgraph Node[\"Kubernetes Node\"]\nsubgraph Pod[\"Pod / Container\"]\nApp[\"C# Application\"] -->|ILogger| Provider[\"Logging Provider\"]\nProvider -->|Console 輸出| Std[\"stdout / stderr\"]\nend\nStd -->|交由 Runtime 處理| Runtime[\"Container Runtime\"]\nRuntime -->|寫入紀錄| Files[\"Node 上的 Container Logs\"]\nFiles -->|讀取| Collector[\"Log Collector\"]\nCollector -->|附加 metadata / labels| Enriched[\"Log 與時間戳記、Labels\"]\nend\nsubgraph Central[\"集中服務\"]\nLoki[\"Loki API：接收並保存\"]\nend\nEnriched -->|HTTP Push Logs| Loki"
+  },
+  {
+    "title": "Log 查詢時序：請求與回傳",
+    "source": "sequenceDiagram\nparticipant User as 使用者\nparticipant Grafana as Grafana Explore\nparticipant Loki as Loki\nUser->>Grafana: 選擇資料來源與時間範圍\nGrafana->>Loki: LogQL Query\nLoki-->>Grafana: Query Result：符合條件的 Logs\nGrafana-->>User: 顯示 Log 清單"
+  },
+  {
+    "title": "Memory Panel 查詢時序",
+    "source": "sequenceDiagram\nparticipant Panel as Grafana Panel\nparticipant Prom as Prometheus\nPanel->>Prom: PromQL 與時間範圍\nProm-->>Panel: 時間序列樣本\nPanel->>Panel: 換算顯示單位並繪圖"
+  },
+  {
+    "title": "告警評估：超過門檻後才進入狀態判定",
+    "source": "flowchart TB\nEvaluate[\"Grafana 定期評估\"] -->|查詢最近 5 分鐘| Query[\"Loki 回傳 Dify Error 數量\"]\nQuery --> Threshold{\"錯誤數量大於 5？\"}\nThreshold -->|否| Next[\"本次未達門檻，等待下次評估\"]\nThreshold -->|是，範例值為 8| State[\"依 Pending 等設定判定告警狀態\"]\nState --> Ready{\"已達 Alerting？\"}\nReady -->|否| Wait[\"繼續評估條件是否持續成立\"]\nReady -->|是| Policy[\"依通知策略與時機處理\"]\nPolicy -->|符合通知條件| Notify[\"Slack / Email / 其他管道\"]"
+  }
+]

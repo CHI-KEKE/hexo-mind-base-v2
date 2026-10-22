@@ -1,0 +1,10 @@
+{
+  "pureTextMatches": true,
+  "prefixFree": true,
+  "smallExample": 18,
+  "largeExample": 170,
+  "encodedABCD": "010110111",
+  "tabCount": 10,
+  "diagrams": 7,
+  "forbidden": false
+}

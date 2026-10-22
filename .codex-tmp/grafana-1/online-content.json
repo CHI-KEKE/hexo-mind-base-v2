@@ -1,0 +1,26 @@
+[
+  {
+    "path": "2026/09/22/Metrix-grafana-1/index.html",
+    "http": 200,
+    "matchesBuild": true,
+    "sha256": "447186c6229d512adf60db00b1fbd098dc9065cbe272f5868e38c3350244d807"
+  },
+  {
+    "path": "2026/09/22/Metrix-grafana-1-pure/index.html",
+    "http": 200,
+    "matchesBuild": true,
+    "sha256": "114ffcb5167d4c940b20e3afbd9a103e2a05be2e29faeb5a929690804a11a4e5"
+  },
+  {
+    "path": "images/grafana-1/loki-query.svg",
+    "http": 200,
+    "matchesBuild": true,
+    "sha256": "795a4201ba6a4b7727881a3a1ede36f8b315329f7dfb37142009fcc3f873f3c4"
+  },
+  {
+    "path": "images/grafana-1/memory-panel.svg",
+    "http": 200,
+    "matchesBuild": true,
+    "sha256": "5c6d4ae8a6e37554646c504705a08e0223d607609a8685b22e7b936fb9bce58a"
+  }
+]

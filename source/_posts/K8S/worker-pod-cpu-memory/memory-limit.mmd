@@ -1,0 +1,6 @@
+flowchart TD
+A["任務執行，Memory 用量增加"] --> B["逐漸接近 2000Mi 上限"]
+B --> C{"記憶體需求能否滿足？"}
+C -->|可以，例如回收後足夠| D["繼續執行"]
+C -->|無法滿足，觸發 cgroup OOM| E["程序可能被終止"]
+E --> F["Container 可能顯示 OOMKilled"]

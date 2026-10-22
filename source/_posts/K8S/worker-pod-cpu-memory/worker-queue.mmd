@@ -1,0 +1,10 @@
+flowchart TD
+Q["共用 Queue / 工作來源"]
+subgraph P1["Pod 1"]
+W1["Worker Container 1"]
+end
+subgraph P2["Pod 2"]
+W2["Worker Container 2"]
+end
+W1 -->|拉取工作| Q
+W2 -->|拉取工作| Q

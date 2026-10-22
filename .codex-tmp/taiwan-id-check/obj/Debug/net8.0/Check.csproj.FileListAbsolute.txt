@@ -1,0 +1,14 @@
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\bin\Debug\net8.0\Check.exe
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\bin\Debug\net8.0\Check.deps.json
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\bin\Debug\net8.0\Check.runtimeconfig.json
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\bin\Debug\net8.0\Check.dll
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\bin\Debug\net8.0\Check.pdb
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.GeneratedMSBuildEditorConfig.editorconfig
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.AssemblyInfoInputs.cache
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.AssemblyInfo.cs
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.csproj.CoreCompileInputs.cache
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.dll
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\refint\Check.dll
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.pdb
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\Check.genruntimeconfig.cache
+C:\Dev\Hexo-mind\.codex-tmp\taiwan-id-check\obj\Debug\net8.0\ref\Check.dll

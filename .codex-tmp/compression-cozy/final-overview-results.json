@@ -1,0 +1,32 @@
+{
+  "errors": [],
+  "result": [
+    {
+      "mode": "desktop",
+      "tab": 1,
+      "svg": 0,
+      "errors": false,
+      "width": 1440,
+      "viewport": 1440,
+      "markers": true
+    },
+    {
+      "mode": "mobile",
+      "tab": 1,
+      "svg": 0,
+      "errors": false,
+      "width": 390,
+      "viewport": 390,
+      "markers": true
+    },
+    {
+      "mode": "dark",
+      "tab": 1,
+      "svg": 0,
+      "errors": false,
+      "width": 1440,
+      "viewport": 1440,
+      "markers": true
+    }
+  ]
+}

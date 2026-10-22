@@ -1,0 +1,6 @@
+flowchart TD
+R["Pod 宣告 CPU 500m / Memory 2000Mi"] --> C{"Node A 的 CPU 足夠？"}
+C -->|是| M{"Node A 的 Memory 足夠？"}
+C -->|否| N["排除此 Node，評估其他候選"]
+M -->|否，本例| N
+M -->|是| O["資源條件通過，再檢查其他排程條件"]

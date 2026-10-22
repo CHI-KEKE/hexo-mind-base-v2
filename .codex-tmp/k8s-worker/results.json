@@ -1,0 +1,242 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mode": "desktop",
+      "tab": 1,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "desktop",
+      "tab": 2,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "desktop",
+      "tab": 3,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "desktop",
+      "tab": 4,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 2,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "mobile",
+      "tab": 1,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "mobile",
+      "tab": 2,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "mobile",
+      "tab": 3,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "mobile",
+      "tab": 4,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 2,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "dark",
+      "tab": 1,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "dark",
+      "tab": 2,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "dark",
+      "tab": 3,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "dark",
+      "tab": 4,
+      "visiblePanels": 1,
+      "width": 1440,
+      "viewport": 1440,
+      "svg": 2,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "mobile-dark",
+      "tab": 1,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "mobile-dark",
+      "tab": 2,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    },
+    {
+      "mode": "mobile-dark",
+      "tab": 3,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 1,
+      "raw": false,
+      "logo": true,
+      "code": [
+        {
+          "frame": "rgb(24, 34, 53)",
+          "pre": "rgb(24, 34, 53)"
+        }
+      ],
+      "arrows": true
+    },
+    {
+      "mode": "mobile-dark",
+      "tab": 4,
+      "visiblePanels": 1,
+      "width": 390,
+      "viewport": 390,
+      "svg": 2,
+      "raw": false,
+      "logo": true,
+      "code": [],
+      "arrows": true
+    }
+  ],
+  "pure": {
+    "noTags": true,
+    "hasFormula": true,
+    "hasWorker": true
+  }
+}
