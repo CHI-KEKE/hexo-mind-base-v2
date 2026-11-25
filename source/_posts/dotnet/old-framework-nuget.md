@@ -418,6 +418,12 @@ dotnet nuget config paths
 dotnet nuget list source --format detailed
 ```
 
+### 指定設定檔
+
+```powershell
+dotnet restore src/Nine1.Scm.Web.Api.sln --configfile "C:\Users\Allen Lin\AppData\Roaming\NuGet\NuGet.Config"
+```
+
 ## 重新加入來源
 
 ```powershell
