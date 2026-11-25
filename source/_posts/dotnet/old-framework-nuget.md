@@ -410,6 +410,14 @@ dotnet nuget remove source Nine1.Nuget.Release
 dotnet nuget remove source Nine1.Nuget.Group
 ```
 
+## 了解專案讀取來源
+
+```powershell
+dotnet nuget config paths
+
+dotnet nuget list source --format detailed
+```
+
 ## 重新加入來源
 
 ```powershell
